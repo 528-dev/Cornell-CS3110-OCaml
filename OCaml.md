@@ -2241,7 +2241,7 @@ end
 
 ***Abstraction function maps valid concrete values to abstract values***
 
-![af-listset](C:/Users/50832/Desktop/OCaml/abst-fcn2.png)
+![af-listset](./abst-fcn2.png)
 
 **Document the AF (write it first before implementing operations)**
 
@@ -2361,7 +2361,7 @@ ListSetNoDups.(empty |> add 43 |> add 42 |> add 43 |> string string_of_int)
 
 **Rep.invariant distinguished valid concrete values from invalid concrete values**
 
-<img src="C:/Users/50832/Desktop/OCaml/ri-af.png" alt="af-and-ri" style="zoom:67%;" />
+<img src="./ri-af.png" alt="af-and-ri" style="zoom:67%;" />
 
 **Documenting the RI**
 
@@ -2497,7 +2497,7 @@ Using the abstraction function, we can now talk about what it means for an imple
 
 | commutative diagram                       | example in Set                                               |
 | ----------------------------------------- | ------------------------------------------------------------ |
-| ![commutative-diagram](.\commutation.png) | <img src=".\AFandOp_ex.png" alt="image-20250225191847873" style="zoom: 50%;" /> |
+| ![commutative-diagram](./commutation.png) | <img src="./AFandOp_ex.png" alt="image-20250225191847873" style="zoom: 50%;" /> |
 
 **Correctness of operations**
 

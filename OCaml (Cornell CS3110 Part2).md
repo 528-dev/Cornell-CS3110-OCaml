@@ -229,7 +229,7 @@ end
 
 ***Abstraction function maps valid concrete values to abstract values***
 
-![af-listset](.\abst-fcn2.png)
+![af-listset](./abst-fcn2.png)
 
 **Document the AF (write it first before implementing operations)**
 
@@ -485,7 +485,7 @@ Using the abstraction function, we can now talk about what it means for an imple
 
 | commutative diagram                       | example in Set                                               |
 | ----------------------------------------- | ------------------------------------------------------------ |
-| ![commutative-diagram](.\commutation.png) | <img src=".\AFandOp_ex.png" alt="image-20250225191847873" style="zoom: 50%;" /> |
+| ![commutative-diagram](./commutation.png) | <img src="./AFandOp_ex.png" alt="image-20250225191847873" style="zoom: 50%;" /> |
 
 **Correctness of operations**
 
