@@ -3443,11 +3443,11 @@ y (* - : int ref = {contents = 2110} *)
 
 - So this picture was a lie : 
 
-  <img src="C:/Users/50832/Desktop/OCaml/valExprlie.png" alt="image-20250227142619463" style="zoom:33%;" />
+  <img src="./valExprlie.png" alt="image-20250227142619463" style="zoom:33%;" />
 
 - truth is 
 
-  <img src="C:/Users/50832/Desktop/OCaml/valExpr.png" alt="image-20250227142755592" style="zoom:33%;" />
+  <img src="./valExpr.png" alt="image-20250227142755592" style="zoom:33%;" />
 
 ---
 
@@ -3711,13 +3711,13 @@ let vec_add'' v1 v2 = Array.map2 (+.) v1 v2
 
 **CODE AS DATA** : *compiler is code that operate on data. That data is itself code.*
 
-<img src="C:/Users/50832/Desktop/OCaml/compilerArch.png" alt="image-20250227011320501" style="zoom: 50%;" />
+<img src="./compilerArch.png" alt="image-20250227011320501" style="zoom: 50%;" />
 
 **COMPILER GOES AWAY** : *not needed to run the program*
 
 ### 9.1.2 Interpreter
 
-<img src="C:\Users\50832\Desktop\OCaml\interpreterArch.png" alt="image-20250227011618980" style="zoom:50%;" />
+<img src="./interpreterArch.png" alt="image-20250227011618980" style="zoom:50%;" />
 
 **INTERPRETER STAYS** : *needed to run the program*
 
@@ -3732,7 +3732,7 @@ let vec_add'' v1 v2 = Array.map2 (+.) v1 v2
 
 - Some times mixed : 
 
-<img src="C:/Users/50832/Desktop/OCaml/mix.png" alt="image-20250227012139705" style="zoom:50%;" />
+<img src="./mix.png" alt="image-20250227012139705" style="zoom:50%;" />
 
 ***Intermediate program*** : java bytecode, OCaml .byte file etc.
 
@@ -3754,10 +3754,10 @@ let vec_add'' v1 v2 = Array.map2 (+.) v1 v2
 **details**
 
 1. Lexical analysis with ***lexer***
-   - <img src="C:/Users/50832/Desktop/OCaml/Lexer.png" alt="image-20250227013316637" style="zoom:33%;" />
+   - <img src="./Lexer.png" alt="image-20250227013316637" style="zoom:33%;" />
 
 2. Syntactic analysis with ***parser***
-   - <img src="C:/Users/50832/Desktop/OCaml/Parser.png" alt="image-20250227013448332" style="zoom:33%;" />
+   - <img src="./Parser.png" alt="image-20250227013448332" style="zoom:33%;" />
 
 3. **Semantic analysis** on AST
 
