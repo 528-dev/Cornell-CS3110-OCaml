@@ -1413,7 +1413,7 @@ y (* - : int ref = {contents = 2110} *)
 **Evaluation**
 
 - Evaluate `e` to a value `v`
-- Allocate a new location `loc` in memory to hold v
+- Allocate a new location `loc` in memory to hold `v`
 - Store `v` in `loc`
 - Return `loc`
 
@@ -1423,7 +1423,269 @@ y (* - : int ref = {contents = 2110} *)
   - Note: `ref` is used as keyword in type and as keyword in value
 - `ref e : t ref` if `e : t` where `t` is a type and `e` is a value
 
+**Locations**
 
+- Locations are values
+
+- Locations are not expressions
+
+- So this picture was a lie : 
+
+  <img src="./valExprlie.png" alt="image-20250227142619463" style="zoom:33%;" />
+
+- truth is 
+
+  <img src="./valExpr.png" alt="image-20250227142755592" style="zoom:33%;" />
+
+---
+
+**Syntax**
+
+`e1 := e2`
+
+**Evaluation**
+
+- Evaluate `e2` to a value `v2`
+- Evaluate `e1` to a location `loc`
+- Store `v2` in `loc`
+- Return `()`
+
+**Type checking**
+
+if `e2 : t`
+
+and `e1 : t ref`
+
+then `e1 := e2 : unit`
+
+**Unit**
+
+- unit is a type
+  - Its only value is `()`, alse pronounced "unit"
+  - There are no intersting operations on unit
+
+---
+
+**Syntax**
+
+`!e`
+
+**Evaluation**
+
+- Evaluate `e` to `loc`
+- Return contents of `loc`
+
+## 7.3 Semicolon
+
+**Syntax**
+
+`e1; e2`
+
+**Evaluation**
+
+- Evaluate `e1` to a value `v1`
+- Then throw away that value (note: `e1` could have side effects)
+- Evaluate `e2` to a value `v2`
+- return `v2`
+
+**Type checking**
+
+- If `e1 : unit`
+- and `e2 : t`
+- then `e1; e2 : t`
+
+Semicolon is almost just syntactic sugar:
+
+```ocaml
+e1; e2
+(* means the same as *)
+let () = e1 in e2
+```
+
+Except: if it's not true that `e1 : unit` ...
+
+- let syntax: type error
+- semicolon syntax: type warning because you probably don't want to discard e1's value
+  - if you do, use ignore : 'a -> unit
+
+```ocaml
+(* utop *)
+let print_and_add x y = print_int (x + y); print_newline (); x + y
+ignore (print_and_add 3 4); print_and_add 4 5
+```
+
+## 7.4 Aliasing
+
+```ocaml
+let x = ref 42
+let y = ref 42
+let z = x
+let () = z := 58
+let w = !y + !z + !x
+```
+
+**Equality**
+
+- Suppose we have two refs...
+  - `let r1 = ref 3110`
+  - `let r2 = ref 3110`
+- Double equals is *physical equality* (**Only when you care about whether two refs point to the same memory location**)
+  - `r1 == r1`
+  - `r1 != r2`
+- Single equals is *structure equality* (**Most of time use it**)
+  - `r1 = r1`
+  - `r1 = r2`
+  - `ref 3110 <> ref 2110`
+
+## 7.5 implementing a Counter
+
+```ocaml
+(* counter.ml *)
+
+(* (* bug version1 *)
+let next () = 
+	let counter = ref 0 in
+		incr counter; !counter *)
+		
+(* (* bug version2 *)
+let next = fun () ->
+	let counter = ref 0 in
+		incr counter; !counter *)
+
+let next = 
+	let counter = ref 0 in
+		fun () -> incr counter; !counter (* when execute there, counter is substituded to loc {content = 0} *)
+```
+
+```ocaml
+(* utop *)
+
+#use "counter.ml"
+counter
+counter ()
+counter ()
+```
+
+## 7.6 Mutable Fields
+
+```ocaml
+type point = {x : int; y : int; mutable c : string}
+let p = {x = 0; y = 0; c = "red"}
+p (* val p : point = {x = 0; y = 0; c = "red"} *)
+p.c <- "white"
+p (* val p : point = {x = 0; y = 0; c = "white"} *)
+```
+
+In fact, Ref cells are essentially implemented as records with a mutable field:
+
+```ocaml
+type 'a ref = {mutable contents : 'a}
+let ref x = {contents = x}
+let (!) r = r.contents
+let (:=) r newval = r.contents <- newval
+```
+
+## 7.7 & 7.8 Mutable Singly Linked Lists
+
+```ocaml
+(* Mutable single-linked lists *)
+
+(** An ['a node] is a node of a mutable singly-linked list.
+    It contains a value of type ['a] and optionally has a
+    pointer to the next node. *)
+type 'a node = {
+  value : 'a;
+  mutable next : 'a node option;
+}
+
+(** An ['a mlist] is a mutable singly-linked list with
+    elements of type ['a]. *)
+type 'a mlist = {
+  mutable first : 'a node option;
+}
+
+(** [create_node v] is a containing value [v] with no link
+    to another nocde. *)
+let create_node v = {
+  next = None;
+  value = v;
+}
+
+(** [singleton v] is a singly-linked list containing
+    exactly one value, [v]. *)
+let singleton v = {
+  first = Some (create_node v)
+}
+
+(* let empty = {
+  first = None
+} (* wrong implementation *)*)
+let empty () = {
+  first = None
+}
+
+let insert_first lst v = match lst.first with
+  | None -> lst.first <- Some (create_node v)
+  | was_first -> let new_first = create_node v in
+    new_first.next <- was_first; lst.first <- Some new_first
+```
+
+## 7.9 & 7.10 Arrays
+
+```ocaml
+[| 1 |] (* - : int array = [|1|] *)
+[| 1; 2; 3 |] (* - : int array = [|1; 2; 3|] *)
+let a = [| 1; 2; 3 |] (* val a : int array = [|1; 2; 3|] *)
+a.(1) (* - : int = 1 *)
+a.(0) <- 4 (* - : unit = () *)
+a (* - : int array = [|4; 2; 3|] *)
+```
+
+```ocaml
+(* arrays.ml *)
+
+type vec = float array
+
+let v = [|1.; 0.|]
+
+let vec_print v =
+        for i = 0 to Array.length v - 1 do
+                print_float v.(i); print_newline ()
+        done
+
+
+let vec_print' v =
+        let print_elt n =
+                print_float n; print_newline ()
+        in
+        Array.iter print_elt v
+
+
+let vec_print'' v =
+  Array.iter (Printf.printf "%f\n") v
+
+(** [vec_add v1 v2] is the sum of vectors [v1] and [v2].
+  Example : [vec_add [|1.; 2.|] [|3.; 4.|]]
+  is [[|4.; 6.|]]
+  Requires: [v1] and [v2] have the same length *)
+let vec_add v1 v2 =
+  let len1, len2 = Array.length v1, Array.length v2 in
+  if len1 <> len2 then invalid_arg "different lengths" else
+    let v3 = Array.make len1 0. in
+      for i = 0 to len1 - 1 do
+        v3.(i) <- v1.(i) +. v2.(i)
+      done;
+    v3
+
+let vec_add' v1 v2 =
+  let len1, len2 = Array.length v1, Array.length v2 in
+  if len1 <> len2 then invalid_arg "different lengths" else
+    let elt i = v1.(i) +. v2.(i) in
+    Array.init len1 elt
+
+
+let vec_add'' v1 v2 = Array.map2 (+.) v1 v2
+```
 
 # Ch8. Data Structures
 
@@ -1431,3 +1693,90 @@ y (* - : int ref = {contents = 2110} *)
 
 # Ch9. Interpreters
 
+## 9.1 Compilers and Interpreters
+
+### 9.1.1 Compiler
+
+**CODE AS DATA** : *compiler is code that operate on data. That data is itself code.*
+
+<img src="./compilerArch.png" alt="image-20250227011320501" style="zoom: 50%;" />
+
+**COMPILER GOES AWAY** : *not needed to run the program*
+
+### 9.1.2 Interpreter
+
+<img src="C:\Users\50832\Desktop\OCaml\interpreterArch.png" alt="image-20250227011618980" style="zoom:50%;" />
+
+**INTERPRETER STAYS** : *needed to run the program*
+
+### 9.1.3 Compiler vs. Interpreter
+
+- Compilers : 
+  - primary job is translation
+  - better performance
+- Interpreters :
+  - primary job is execution
+  - easier implementation
+
+- Some times mixed : 
+
+<img src="./mix.png" alt="image-20250227012139705" style="zoom:50%;" />
+
+***Intermediate program*** : java bytecode, OCaml .byte file etc.
+
+***virtual machine*** : a kind of interpreter.
+
+- Some times even more nested : In fact, inside of the java VM, they've actually stuck a compiler if there's some code that's getting executed a whole lot, it can go ahead and compile that piece of the code down to the machine to get a better performance.
+
+## 9.2 Compiler Architecture
+
+**Two phases**
+
+- ***Front end***: translate source code into *abstract syntax tree (AST)* then into *intermediate representation (IR)*
+- ***Back end***: translate IR into machine code
+
+**Front end of compilers and interpreters largely the same**
+
+---
+
+**details**
+
+1. Lexical analysis with ***lexer***
+   - <img src="./Lexer.png" alt="image-20250227013316637" style="zoom:33%;" />
+
+2. Syntactic analysis with ***parser***
+   - <img src="./Parser.png" alt="image-20250227013448332" style="zoom:33%;" />
+
+3. **Semantic analysis** on AST
+
+   - accept or reject program
+
+   - create **symbol table** mapping identifiers to types
+
+   - **decorate AST with types**
+
+   - etc.
+
+4. Next might **translate AST into an IR** that is a kind of abstract machine code
+
+5. Then : 
+
+   - **Interpreter excutes AST or IR**
+
+   - **Compiler translates IR into machine code**
+
+## 9.3 Extended demo : Calculator
+
+### 9.3.1 Intro
+
+We are going to implement an interpreter for this *calculator language*.
+
+- Intergers
+- Addition
+- Multiplication
+- Parentheses
+- Whitespace
+
+input is a string of a expression
+
+output is a string of the result

@@ -65,7 +65,7 @@ let definition IS NOT expression, Vice versa.
 
 An interesting usage make ***let*** convert to ***expressions*** : let a = 0 in a;;  bind 0 to a and evaluate a. another example : `let b = 2 in 2 * b`
 
-Out of ***let*** Expression, ***let*** defintion become invalid. That’s saying after `let a = 0 in a`,  `let a = 0` become invalid.
+Out of ***let*** Expression, ***let*** defintion become invalid. That's saying after `let a = 0 in a`,  `let a = 0` become invalid.
 
 ## 2.5 Variable Expressions and Scope
 
@@ -136,7 +136,7 @@ Evaluation of `e0 e1 … en`:
 
    `fun x1 ... xn -> e`
 
-2. substitute `vi` for `xi` in `e` yielding new expression `e'`. evaluate it : `e’ ==> v`
+2. substitute `vi` for `xi` in `e` yielding new expression `e'`. evaluate it : `e' ==> v`
 
 3. result is `v`
 
@@ -165,7 +165,7 @@ to
 
 The above two ways are equivalent. Later is syntactic sugar
 
-> not necessary, but make language “sweeter”
+> not necessary, but make language "sweeter"
 
 another syntactic sugar : 
 
@@ -308,7 +308,7 @@ operator `::` is used to concat `'a` and `'a list`
 - Singly-linked:
   - Good for sequential access of short-to-medium length lists
   - Data structures are tools: none is perfect
-  - we’ll study the implementation later
+  - we'll study the implementation later
 
 ## 3.2 List Syntax and Semantics
 
@@ -353,7 +353,7 @@ use record type :
 
 ```ocaml
 let ljh = {
-    name = “liujunhui”;
+    name = "liujunhui";
     year = 2001;
 }
 ```
@@ -362,7 +362,7 @@ Or, if you want to explicitly perform type checking :
 
 ```ocaml
 let ljh : student = {
-    name = “liujunhui”;
+    name = "liujunhui";
     year = 2001;
 }
 ```
@@ -533,7 +533,7 @@ let rec append lst1 lst2 =
 
 ## 3.9 The `function` Keyword
 
-*Immediately matching against implicit final argument is so useful there’s sugar for it*
+*Immediately matching against implicit final argument is so useful there's sugar for it*
 
 ```ocaml
 let f x y z =
@@ -578,7 +578,7 @@ let rec length = function
   - "append"
   - Combine two lists
   - `'a list -> 'a list -> 'a list`
-  - Linear time in first list : for lst1 @ lst2, it’s O(length lst1)
+  - Linear time in first list : for lst1 @ lst2, it's O(length lst1)
 
 ## 3.11 Pattern Matching Syntax and Semantics
 
@@ -620,7 +620,7 @@ if `e` and `pi` have type `ta` and `ei` have type `tb` then entire match express
 
 - A constant matches itself
 - An identifier aka pattern variable matches anything and binds it in the scope of the branch
-- The underscore aka wilcard matches anything but doesn’t bind it
+- The underscore aka wilcard matches anything but doesn't bind it
 
 ### 3.11.4 Data type patterns
 
@@ -634,7 +634,7 @@ All of which match the corresponding data type values, and can bind parts of the
 
 ## 3.12 Static Checking of Pattern Matching
 
-OCaml’s static checking is not only type checking
+OCaml's static checking is not only type checking
 
 e.g.
 
@@ -644,7 +644,7 @@ let bad_empty lst =
     | [] -> true
 ```
 
-This coverage of space of possible shapes that this data could take is not exhaustive; simply say we’ve left out a branch which maybe cause Match_failure exception at runtime. Luckily OCaml’s static checking will detect it.
+This coverage of space of possible shapes that this data could take is not exhaustive; simply say we've left out a branch which maybe cause Match_failure exception at runtime. Luckily OCaml's static checking will detect it.
 
 ---
 
@@ -661,8 +661,8 @@ OCaml compiler will detect branch 2 will never been enter
 ---
 
 ```ocaml
-let rec bud_sum’ lst = 
-    List.hd lst + bad_sum’ (List.tl lst)
+let rec bud_sum' lst = 
+    List.hd lst + bad_sum' (List.tl lst)
 ```
 
 List.hd and List.tl are from list standard library. List.hd [1;2;3];; returns 1 : int and List.tl [1;2;3];; returns [2;3] : int list. OCaml complier will **not** detect that something wrong because the risk of error depends on standard library fun
@@ -690,7 +690,7 @@ let r1 = Rectangle {lower_left = (-1., -1.); upper_right = (1., 1.)}
 
 > In OCaml, ***constructor*** is used in variant types and record types to create concrete data type instance. For example, in type color = Red | Green | Blue, **Red, Green and Blue are constructor**. Or in type shape = Circle of float | Rectangle of float * float, **Cirle and Rectangle are also constructors but they need parameters** (let s = Circle 10.  ;;  let s2 = Rectangle (5., 8.);; )
 
-3.13 cont’d
+3.13 cont'd
 
 ```ocaml
 let avg a b = (a +. b)  /. 2.
@@ -867,7 +867,7 @@ let get_val o = match o with None -> failwith "??" | Some x -> x
 
 ---
 
-*because is None we don’t know what 'a to return, how to solve it ? Add a parameter default :* 
+*because is None we don't know what 'a to return, how to solve it ? Add a parameter default :* 
 
 ```ocaml
 let get_val default o = match o with None -> default | Some x -> x (* val get_val : 'a -> 'a option -> 'a = <fun> *)
@@ -935,7 +935,7 @@ OhNo "oops" (* use like this after provide exception OhNo *)
   - Build-in function `failwith : string -> 'a`
 - `exception InvalidArgument of string`
   - Exception raised by library functions to signal that the given argements do not make sense
-  - Build-in function `invalid_arg : string -> ’a`
+  - Build-in function `invalid_arg : string -> 'a`
 
 ## 3.22 Handing Exceptions
 
@@ -1003,7 +1003,7 @@ let fourth'' x = x |> square |> square
 
 ---
 
-*Note that quad’’ and fourth’’ have something similar, can we **factor it out** ?*
+*Note that quad'' and fourth'' have something similar, can we **factor it out** ?*
 
 e.g.
 
@@ -1050,7 +1050,7 @@ let rec map f = function [] -> [] | h :: t -> f h :: map f t (* val map : ('a ->
 
 ---
 
-***Abstraction Principle : Factor out recurring code patterns. Don’t duplicate them.***
+***Abstraction Principle : Factor out recurring code patterns. Don't duplicate them.***
 
 ## 4.4 Combine
 
@@ -1189,11 +1189,11 @@ let _ = map (fun c -> c * 2) t (* - : int tree = Node (2, Node (4, Leaf, Leaf), 
 
 https://informationisbeautiful.net/visualizations/million-lines-of-code/ shows how many codes in read world software
 
-... can’t be done by one person
+... can't be done by one person
 
 ... no individual programmer can understand all the details
 
-... too complex to build with OCaml we’ve seen so far
+... too complex to build with OCaml we've seen so far
 
 ### 5.1.2 Modularity
 
@@ -1282,7 +1282,7 @@ let s' = MyStack.push 1 s
 
 ## 5.3 Functional Data Structures
 
-- No mutable updates : operations take an “old” value and return “new” value
+- No mutable updates : operations take an "old" value and return "new" value
 - Functional data structres are **persistent** rather than **ephemral**
 - Efficiency ? Complexity ?
 
@@ -1299,7 +1299,7 @@ end
 ```
 
 - ModuleName must be capitalized, idiomatically in CamelCase
-- `Definitions` inside of a module can be anything we’ve seen :
+- `Definitions` inside of a module can be anything we've seen :
   - `let`, `type`, `exception`
   - `module`
   - Can be terminated by`;;` but not idiomatic
@@ -1347,7 +1347,7 @@ Bind the module to M
 
 ## 5.5 Scope and Opening
 
-5.3 Cont’d
+5.3 Cont'd
 
 ```ocaml
 let x = ListStack.peek (ListStack.push 42 List.Stack.empty)
@@ -1631,7 +1631,7 @@ end
 
 ***Abstract types give encapsulation***
 
-- Clients don’t need to know queue is implemented with list
+- Clients don't need to know queue is implemented with list
   - Clients will exploit knowledge of representation if you let them
 - What if implementers want to upgrade to two-list queues(see 5.7 and 5.6 ) ?
   - If list implementation is hidden, they can freely change
@@ -1716,7 +1716,7 @@ let pop = function [] -> raise Empty | _ :: s -> s
 
 ## 5.13 Utop with Module
 
-Cont’d 5.12 e.g.
+Cont'd 5.12 e.g.
 
 **compile way 1**
 
@@ -1758,7 +1758,7 @@ Cont’d 5.12 e.g.
 
 *we can type*
 
-`#require “ounit2”;;`
+`#require "ounit2";;`
 
 *in utop to use third part library*
 
@@ -1869,7 +1869,7 @@ module K : sig val y : int end *)
 - `open M` :
   - imports definitions from `M`
   - makes them available for local consumption
-  - doesn’t export them to outside world
+  - doesn't export them to outside world
 - `include M` :
   - imports definitions from `M`
   - makes them available for local consumption
@@ -2707,7 +2707,7 @@ $ bisect-ppx-report html
 
 to generate the Bisect report from your test suite execution. The report is in a newly-created directory named `_coverage`.
 
-8. Open the file `_coverage/index.html` in a web browser. Look at the per-file coverage; you’ll see we’ve managed to test a few percent of `sorts.ml` with our test suite so far. Click on the link in that report for `sorts.ml`. You’ll see that we’ve managed to cover only one line of the source code.
+8. Open the file `_coverage/index.html` in a web browser. Look at the per-file coverage; you'll see we've managed to test a few percent of `sorts.ml` with our test suite so far. Click on the link in that report for `sorts.ml`. You'll see that we've managed to cover only one line of the source code.
 
 9. There are some additional tests in the test file. Try uncommenting those, as documented in the test file, and increasing your code coverage. Between each run, you will need to delete the `bisectNNNN.coverage` files, otherwise the report will contain information from those previous runs:
 
@@ -2715,7 +2715,7 @@ to generate the Bisect report from your test suite execution. The report is in a
 $ rm bisect*.coverage
 ```
 
-By the time you’re done uncommenting the provided tests, you should be at 25% coverage, including all of the insertion sort implementation. For fun, try adding more tests to get 100% coverage of merge sort.
+By the time you're done uncommenting the provided tests, you should be at 25% coverage, including all of the insertion sort implementation. For fun, try adding more tests to get 100% coverage of merge sort.
 
 ---
 
@@ -2926,9 +2926,9 @@ val is_even : int -> bool = <fun>
 val is_sorted : 'a list -> bool = <fun>
 ```
 
-**Arbitraries.** The way we present to QCheck the outputs to be checked is with a value of type `'a QCheck.arbitrary`. This type represents an “arbitrary” value of type `'a`—that is, it has been pseudorandomly chosen as a value that we want to check, and more specifically, to check whether it satisfies a property.
+**Arbitraries.** The way we present to QCheck the outputs to be checked is with a value of type `'a QCheck.arbitrary`. This type represents an "arbitrary" value of type `'a`—that is, it has been pseudorandomly chosen as a value that we want to check, and more specifically, to check whether it satisfies a property.
 
-We can create *arbitraries* out of generators using the function `QCheck.make : 'a QCheck.Gen.t -> 'a QCheck.arbitrary`. (Actually that function takes some optional arguments that we elide here.) This isn’t actually the normal way to create arbitraries, but it’s a simple way that will help us understand them; we’ll get to the normal way in a little while. For example, the following expression represents an arbitrary integer:
+We can create *arbitraries* out of generators using the function `QCheck.make : 'a QCheck.Gen.t -> 'a QCheck.arbitrary`. (Actually that function takes some optional arguments that we elide here.) This isn't actually the normal way to create arbitraries, but it's a simple way that will help us understand them; we'll get to the normal way in a little while. For example, the following expression represents an arbitrary integer:
 
 ```ocaml
 QCheck.make QCheck.Gen.int (* - : int QCheck.arbitrary =
@@ -2967,7 +2967,7 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 - : int = 1 *)
 ```
 
-Unfortunately, that output isn’t very informative
+Unfortunately, that output isn't very informative
 
 ### 6.19.4 Informative Output from QCheck
 
@@ -3395,11 +3395,401 @@ In `Set` (see 6.5), we will get
 
 # Ch7. Mutablility
 
+## 7.1 Refs
 
+- Aka "ref" or "ref cell"
+- Pointer to a **typed location** in memory
+- Binding of varible to pointer: **immutable**
+- Contents of memory location: **mutable**
+
+```ocaml
+(* utop *)
+(* type in utop line by line seperated by ;; *)
+
+let y = ref 3110; (* val y : int ref = {contents = 3110} *)
+y (* - : int ref = {contents = 3110} *)
+!y (* - : int = 3110 *)
+y := 2110 (* - : unit = () *)
+y (* - : int ref = {contents = 2110} *)
+!y (* - : int = 2110 *)
+
+(* y is immutable, !y is mutable *)
+```
+
+## 7.2 Syntax and Semantics and Refs
+
+**Syntax**
+
+`ref e`
+
+**Evaluation**
+
+- Evaluate `e` to a value `v`
+- Allocate a new location `loc` in memory to hold `v`
+- Store `v` in `loc`
+- Return `loc`
+
+**Type checking**
+
+- New type constructor: `t ref` where `t` is a type
+  - Note: `ref` is used as keyword in type and as keyword in value
+- `ref e : t ref` if `e : t` where `t` is a type and `e` is a value
+
+**Locations**
+
+- Locations are values
+
+- Locations are not expressions
+
+- So this picture was a lie : 
+
+  <img src="C:/Users/50832/Desktop/OCaml/valExprlie.png" alt="image-20250227142619463" style="zoom:33%;" />
+
+- truth is 
+
+  <img src="C:/Users/50832/Desktop/OCaml/valExpr.png" alt="image-20250227142755592" style="zoom:33%;" />
+
+---
+
+**Syntax**
+
+`e1 := e2`
+
+**Evaluation**
+
+- Evaluate `e2` to a value `v2`
+- Evaluate `e1` to a location `loc`
+- Store `v2` in `loc`
+- Return `()`
+
+**Type checking**
+
+if `e2 : t`
+
+and `e1 : t ref`
+
+then `e1 := e2 : unit`
+
+**Unit**
+
+- unit is a type
+  - Its only value is `()`, alse pronounced "unit"
+  - There are no intersting operations on unit
+
+---
+
+**Syntax**
+
+`!e`
+
+**Evaluation**
+
+- Evaluate `e` to `loc`
+- Return contents of `loc`
+
+## 7.3 Semicolon
+
+**Syntax**
+
+`e1; e2`
+
+**Evaluation**
+
+- Evaluate `e1` to a value `v1`
+- Then throw away that value (note: `e1` could have side effects)
+- Evaluate `e2` to a value `v2`
+- return `v2`
+
+**Type checking**
+
+- If `e1 : unit`
+- and `e2 : t`
+- then `e1; e2 : t`
+
+Semicolon is almost just syntactic sugar:
+
+```ocaml
+e1; e2
+(* means the same as *)
+let () = e1 in e2
+```
+
+Except: if it's not true that `e1 : unit` ...
+
+- let syntax: type error
+- semicolon syntax: type warning because you probably don't want to discard e1's value
+  - if you do, use ignore : 'a -> unit
+
+```ocaml
+(* utop *)
+let print_and_add x y = print_int (x + y); print_newline (); x + y
+ignore (print_and_add 3 4); print_and_add 4 5
+```
+
+## 7.4 Aliasing
+
+```ocaml
+let x = ref 42
+let y = ref 42
+let z = x
+let () = z := 58
+let w = !y + !z + !x
+```
+
+**Equality**
+
+- Suppose we have two refs...
+  - `let r1 = ref 3110`
+  - `let r2 = ref 3110`
+- Double equals is *physical equality* (**Only when you care about whether two refs point to the same memory location**)
+  - `r1 == r1`
+  - `r1 != r2`
+- Single equals is *structure equality* (**Most of time use it**)
+  - `r1 = r1`
+  - `r1 = r2`
+  - `ref 3110 <> ref 2110`
+
+## 7.5 implementing a Counter
+
+```ocaml
+(* counter.ml *)
+
+(* (* bug version1 *)
+let next () = 
+	let counter = ref 0 in
+		incr counter; !counter *)
+		
+(* (* bug version2 *)
+let next = fun () ->
+	let counter = ref 0 in
+		incr counter; !counter *)
+
+let next = 
+	let counter = ref 0 in
+		fun () -> incr counter; !counter (* when execute there, counter is substituded to loc {content = 0} *)
+```
+
+```ocaml
+(* utop *)
+
+#use "counter.ml"
+counter
+counter ()
+counter ()
+```
+
+## 7.6 Mutable Fields
+
+```ocaml
+type point = {x : int; y : int; mutable c : string}
+let p = {x = 0; y = 0; c = "red"}
+p (* val p : point = {x = 0; y = 0; c = "red"} *)
+p.c <- "white"
+p (* val p : point = {x = 0; y = 0; c = "white"} *)
+```
+
+In fact, Ref cells are essentially implemented as records with a mutable field:
+
+```ocaml
+type 'a ref = {mutable contents : 'a}
+let ref x = {contents = x}
+let (!) r = r.contents
+let (:=) r newval = r.contents <- newval
+```
+
+## 7.7 & 7.8 Mutable Singly Linked Lists
+
+```ocaml
+(* Mutable single-linked lists *)
+
+(** An ['a node] is a node of a mutable singly-linked list.
+    It contains a value of type ['a] and optionally has a
+    pointer to the next node. *)
+type 'a node = {
+  value : 'a;
+  mutable next : 'a node option;
+}
+
+(** An ['a mlist] is a mutable singly-linked list with
+    elements of type ['a]. *)
+type 'a mlist = {
+  mutable first : 'a node option;
+}
+
+(** [create_node v] is a containing value [v] with no link
+    to another nocde. *)
+let create_node v = {
+  next = None;
+  value = v;
+}
+
+(** [singleton v] is a singly-linked list containing
+    exactly one value, [v]. *)
+let singleton v = {
+  first = Some (create_node v)
+}
+
+(* let empty = {
+  first = None
+} (* wrong implementation *)*)
+let empty () = {
+  first = None
+}
+
+let insert_first lst v = match lst.first with
+  | None -> lst.first <- Some (create_node v)
+  | was_first -> let new_first = create_node v in
+    new_first.next <- was_first; lst.first <- Some new_first
+```
+
+## 7.9 & 7.10 Arrays
+
+```ocaml
+[| 1 |] (* - : int array = [|1|] *)
+[| 1; 2; 3 |] (* - : int array = [|1; 2; 3|] *)
+let a = [| 1; 2; 3 |] (* val a : int array = [|1; 2; 3|] *)
+a.(1) (* - : int = 1 *)
+a.(0) <- 4 (* - : unit = () *)
+a (* - : int array = [|4; 2; 3|] *)
+```
+
+```ocaml
+(* arrays.ml *)
+
+type vec = float array
+
+let v = [|1.; 0.|]
+
+let vec_print v =
+        for i = 0 to Array.length v - 1 do
+                print_float v.(i); print_newline ()
+        done
+
+
+let vec_print' v =
+        let print_elt n =
+                print_float n; print_newline ()
+        in
+        Array.iter print_elt v
+
+
+let vec_print'' v =
+  Array.iter (Printf.printf "%f\n") v
+
+(** [vec_add v1 v2] is the sum of vectors [v1] and [v2].
+  Example : [vec_add [|1.; 2.|] [|3.; 4.|]]
+  is [[|4.; 6.|]]
+  Requires: [v1] and [v2] have the same length *)
+let vec_add v1 v2 =
+  let len1, len2 = Array.length v1, Array.length v2 in
+  if len1 <> len2 then invalid_arg "different lengths" else
+    let v3 = Array.make len1 0. in
+      for i = 0 to len1 - 1 do
+        v3.(i) <- v1.(i) +. v2.(i)
+      done;
+    v3
+
+let vec_add' v1 v2 =
+  let len1, len2 = Array.length v1, Array.length v2 in
+  if len1 <> len2 then invalid_arg "different lengths" else
+    let elt i = v1.(i) +. v2.(i) in
+    Array.init len1 elt
+
+
+let vec_add'' v1 v2 = Array.map2 (+.) v1 v2
+```
 
 # Ch8. Data Structures
 
 
 
 # Ch9. Interpreters
+
+## 9.1 Compilers and Interpreters
+
+### 9.1.1 Compiler
+
+**CODE AS DATA** : *compiler is code that operate on data. That data is itself code.*
+
+<img src="C:/Users/50832/Desktop/OCaml/compilerArch.png" alt="image-20250227011320501" style="zoom: 50%;" />
+
+**COMPILER GOES AWAY** : *not needed to run the program*
+
+### 9.1.2 Interpreter
+
+<img src="C:\Users\50832\Desktop\OCaml\interpreterArch.png" alt="image-20250227011618980" style="zoom:50%;" />
+
+**INTERPRETER STAYS** : *needed to run the program*
+
+### 9.1.3 Compiler vs. Interpreter
+
+- Compilers : 
+  - primary job is translation
+  - better performance
+- Interpreters :
+  - primary job is execution
+  - easier implementation
+
+- Some times mixed : 
+
+<img src="C:/Users/50832/Desktop/OCaml/mix.png" alt="image-20250227012139705" style="zoom:50%;" />
+
+***Intermediate program*** : java bytecode, OCaml .byte file etc.
+
+***virtual machine*** : a kind of interpreter.
+
+- Some times even more nested : In fact, inside of the java VM, they've actually stuck a compiler if there's some code that's getting executed a whole lot, it can go ahead and compile that piece of the code down to the machine to get a better performance.
+
+## 9.2 Compiler Architecture
+
+**Two phases**
+
+- ***Front end***: translate source code into *abstract syntax tree (AST)* then into *intermediate representation (IR)*
+- ***Back end***: translate IR into machine code
+
+**Front end of compilers and interpreters largely the same**
+
+---
+
+**details**
+
+1. Lexical analysis with ***lexer***
+   - <img src="C:/Users/50832/Desktop/OCaml/Lexer.png" alt="image-20250227013316637" style="zoom:33%;" />
+
+2. Syntactic analysis with ***parser***
+   - <img src="C:/Users/50832/Desktop/OCaml/Parser.png" alt="image-20250227013448332" style="zoom:33%;" />
+
+3. **Semantic analysis** on AST
+
+   - accept or reject program
+
+   - create **symbol table** mapping identifiers to types
+
+   - **decorate AST with types**
+
+   - etc.
+
+4. Next might **translate AST into an IR** that is a kind of abstract machine code
+
+5. Then : 
+
+   - **Interpreter excutes AST or IR**
+
+   - **Compiler translates IR into machine code**
+
+## 9.3 Extended demo : Calculator
+
+### 9.3.1 Intro
+
+We are going to implement an interpreter for this *calculator language*.
+
+- Intergers
+- Addition
+- Multiplication
+- Parentheses
+- Whitespace
+
+input is a string of a expression
+
+output is a string of the result
 
