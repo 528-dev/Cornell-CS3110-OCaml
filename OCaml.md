@@ -1,6 +1,79 @@
 # OCaml Programming [Cornell CS3110]
 
+# Ch0 OCaml build (the build example of 8.3
 
+1. preparation
+
+```shell
+$ sudo apt-get install opam
+$ opam init
+$ opam switch list
+#  switch   compiler      description
+→  default  ocaml.4.13.1  default
+$ echo 'eval $(opam env)' >> ~/.bashrc
+```
+
+2. proj init
+
+```shell
+$ dune init proj maps
+Entering directory '/home/ljh/OCaml-tutorial/CS3110/Ch8/maps'
+Success: initialized project component named maps
+```
+
+3. proj structure
+
+```shell
+$cd maps && tree -L 2
+├── _build
+│   └── log
+├── bin
+│   ├── dune
+│   └── main.ml
+├── dune-project
+├── maps.opam
+├── lib
+│   └── dune
+└── test
+    ├── dune
+    └── test_maps.ml
+```
+
+- `lib` and `bin` contain source code files, for libraries and programs, respectively.
+- All the build artifacts, and a copy of sources, are stored in the _build directory. Don't touch it.
+
+4. edit `lib/maps.ml` and `test/maps_test.ml` (see in 8.3)
+5. edit `test/dune`:
+
+```dune
+(test	 					; declare this is a test object
+ (name maps_test)			; test executable file name named `maps_test.exe`
+ (libraries ounit2 maps))	; `ounit2` (test framwork) and `maps`(defined in proj) 
+ (modules maps_test))		; specify the needed module name is `maps_test.ml`
+```
+
+6. edit `lib/dune`:
+
+```
+(library					; decalare this is a library object
+ (name maps)				; library name
+ (modules maps))			; specify the needed module name is `maps.ml`
+```
+
+7. edit `bin/dune`:
+
+```
+(executable					; declare this is a executable object
+ (public_name maps)			; by `dune exec maps` to execute the excutable
+ (name main)				; module name is `main.ml`
+ (libraries maps))			; depended lib name is `maps`
+```
+
+- `name` is name of main module (e.g. main.ml)
+- `public_name` is the public name of executable (e.g. maps)
+- if no `public_name`, it only can execute by `dune exec ./main.exe`
+
+8. `dune build` then  `dune runtest`(test) and `dune exec maps`(exec)
 
 # Ch2. The Basics of OCaml
 
@@ -3700,6 +3773,61 @@ let vec_add'' v1 v2 = Array.map2 (+.) v1 v2
 ```
 
 # Ch8. Data Structures
+
+## 8.1 & 8.2 Map ADT
+
+- Maps bind keys to values
+- Aka associateive array, dictionary, symbol table
+- Abstract notation : 
+  - `{k1 : v1, k2 : v2, ..., kn : vn}`
+
+```ocaml
+(* maps.ml *)
+
+module type Map = sig
+  (** [t] is the type of maps that bind keys of type ['k]
+      to values of type ['v]. *)
+  type ('k, 'v) t
+
+  (** [insert k v m] is the same map as [m], but with an
+      additional binding from [k] to [v]. If [k] was already
+      bound in [m], that binding is replaced by the binding
+      to [v] in the new map. *)
+  val insert : 'k -> 'v -> ('k, 'v) t -> ('k, 'v) t
+
+  (** [find k m] is [Some v] if [k] is bound to [v] in [m]
+      and [None] if not. *)
+  val find : 'k -> ('k, 'v) t -> 'v option
+
+  (** [remove k m] is the same map as [m], but without any
+      binding of [k]. If [k] was not bound in [m], then the
+      map is unchanged. *)
+  val remove : 'k -> ('k, 'v) t -> ('k, 'v) t
+
+  (** [emtpy] is the emtpy map *)
+  val empty : ('k, 'v) t
+
+  (** [of_list lst] is a map containing the same bindings as
+      association list [lst].
+      Requires : [lst] does not contain any duplicate keys. *)
+  val of_list : ('k * 'v) list -> ('k, 'v) t
+
+  (** [bindings m] is an association list containing the same
+      binddings as [m]. There are no duplicate keys in the list*)
+  val bindings m : ('k, 'v) t -> ('k * 'v) list
+end
+```
+
+Up next : three implementations
+
+For each implementation : 
+
+- What is the representation type ?
+- What is the abstraction function ?
+- What are the representation invariants ?
+- What is the efficiency of each operation ?
+
+## 8.3 Association Lists_ Rep Type
 
 
 
