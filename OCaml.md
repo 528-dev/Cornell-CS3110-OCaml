@@ -47,8 +47,8 @@ $cd maps && tree -L 2
 
 ```dune
 (test	 					; declare this is a test object
- (name maps_test)			; test executable file name named `maps_test.exe`
- (libraries ounit2 maps))	; `ounit2` (test framwork) and `maps`(defined in proj) 
+ (name maps_test)			; test executable name is `maps_test.exe`
+ (libraries ounit2 maps))	; `ounit2` (test framwork) and `maps`(defined in proj)
  (modules maps_test))		; specify the needed module name is `maps_test.ml`
 ```
 
@@ -64,8 +64,8 @@ $cd maps && tree -L 2
 
 ```
 (executable					; declare this is a executable object
- (public_name maps)			; by `dune exec maps` to execute the excutable
- (name main)				; module name is `main.ml`
+ (public_name maps)			; give chance to use `dune exec maps` to execute the excutable
+ (name main)				; module name is `main.ml`, executable name is `main.exe`
  (libraries maps))			; depended lib name is `maps`
 ```
 
