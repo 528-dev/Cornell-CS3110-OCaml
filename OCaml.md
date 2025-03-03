@@ -3521,11 +3521,23 @@ y (* - : int ref = {contents = 2110} *)
 
 - So this picture was a lie : 
 
-  <img src="./valExprlie.png" alt="image-20250227142619463" style="zoom:33%;" />
+  ```
+   ---------------------------------------- 
+  |    ----------------                    |
+  |   |     values     |    Expressions    |
+  |    ----------------                    |
+   ----------------------------------------
+  ```
 
 - truth is 
 
-  <img src="./valExpr.png" alt="image-20250227142755592" style="zoom:33%;" />
+  ```
+                   ---------------------- 
+      ------------|----                  |
+     |     values |    |  Expressions    |
+      ------------|----                  |
+                   ----------------------
+  ```
 
 ---
 
@@ -4754,6 +4766,8 @@ Well, we're probably not going to do any better than constant time .. But,
 
 ***how efficient could a functional map be ?***
 
+***The rest of this chapter, we will use Red-Black Tree to implement a functional map***
+
 ### 8.27.1 Maps and Sets
 
 - A map abstractly is just a set of bindings {k1 : v1, k2 : v2, ...}
@@ -4886,6 +4900,7 @@ end
 **Red-black RI**
 
 - **BST** with either Red or Black node
+- **Leaves and root colored black**
 - **Local invariant**: No red node has a red child
 - **Global invariant**: Every path from the root to a leaf has the same number of black nodes
   - Note : Global invariant is an example of why we don't check the entire precondition (costly and not necessarily)
@@ -4896,11 +4911,223 @@ end
   - e.g., B-B-B-B v.s. B-R-B-R-B-R-B
 - Theorem: the maximum depth of a node in a red-black tree of size n is at most 2 * ceil(log(n + 1))
 - So red-black trees are balanced
-- And operations generally run in O(log n ) time.
+- And operations generally run in O(log n) time.
 
 ## 8.32 Red-Black Tree Implementation_ Rep Type, Empty, Mem
 
+```ocaml
+(* sets/lib/sets.ml *)
+(* ... *)
 
+module RbSet : Set = struct
+  (** AF : [Leaf] represents the empty set. [Node (c, l, v, r)] represents
+      the set containing [v], as well as all the elements of the sets
+      represented by [l] and [r].
+      RI : The BST invariant holds, and the local and global RB tree invariants
+      hold. *)
+
+  type color = Red | Blk
+
+  type 'a t = Leaf | Node of (color * 'a t * 'a * 'a t)
+
+  let empty = Leaf
+
+  (** Efficiency : O(log n) *)
+  let rec mem x = function
+    | Leaf -> false
+    | Node (_, l, v, r) ->
+        if x < v then mem x l
+        else if x > v then mem x r
+        else true
+end
+```
+
+## 8.33 Okasakis Algorithm for Red-Black Tree Insertion
+
+**Okasaki's algorithm**
+
+- [Okasaki 1998]: functional RB tree
+- **Beware that online simulators might implement different algorithms**
+- **Always maintain BST + Global Invariant**
+- **Maybe violate** then restore **Local Invariant**:
+  - Make new node red
+  - Recurse back up tree
+    - On the way, look at the nodes immediately beneath current node
+    - Rotate nodes to balance tree and restore Local Invariant
+- At the top, make the root black
+  - Might increase black height by 1
+  - This is only place in the entire algorithm that the black height of the tree is allowed increase
+
+## 8.34 Red-Black Tree Rotations
+
+**Possible violations**
+
+```
+           1             2             3             4
+=================================================================================
+           Bz            Bz            Bx            Bx
+          / \           / \           / \           / \
+         Ry  d         Rx  d         a   Rz        a   Ry
+        /  \          / \               /  \          /  \
+     [Rx]  c         a  [Ry]          [Ry]  d        b   [Rz]
+     /  \               /  \          / \                /  \
+    a    b             b    c        b   c              c    d
+================================ following order ================================
+all nodes in a < x < all nodes in b < y < all nodes in c < z < all nodes in d
+```
+
+**rotated result**
+
+Therefore, we can transform the tree to restore the Local Invariant by replacing any of the above four cases with:
+
+```
+         5
+====================
+         Ry
+        /  \
+      Bx    Bz
+     / \   / \
+    a   b c   d
+```
+
+**RB rotate**
+
+1. `1` to `5`
+
+> BST + Global inveriant maintained
+>
+> Local Invariant: fixed for x and y
+>
+> ... but maybe broken for y and z's original parent !
+>
+> ... so keep recursing up
+
+2. `2` to `5` (in OCaml implementation) but `2` to `1` to `5` (in C++ implementation)
+
+3. almost same as first and second retates
+
+4. almost same as first and second retates
+
+**Implementation**
+
+```ocaml
+let balance = function
+  | (Blk, Node (Red, Node (Red, a, x, b), y, c), z, d) (* 1 *)
+  | (Blk, Node (Red, a, x, Node (Red, b, y, c)), z, d) (* 2 *)
+  | (Blk, a, x, Node (Red, b, y, Node (Red, c, z, d))) (* 3 *)
+  | (Blk, a, x, Node (Red, Node (Red, b, y, c), z, d)) (* 4 *)
+  	-> Node (Red, Node (Blk, a, x, b), y, Node (Blk, c, z, d))
+  | t -> Node t
+```
+
+*How cool the Pattern Matching in OCaml 😎!!*
+
+## 8.35 Red-Black Tree Insert Implementation
+
+```ocaml
+(* sets/lib/sets.ml *)
+(* ... *)
+
+module RbSet : Set = struct
+  (** AF : [Leaf] represents the empty set. [Node (c, l, v, r)] represents
+      the set containing [v], as well as all the elements of the sets
+      represented by [l] and [r].
+      RI : The BST invariant holds, and the local and global RB tree invariants
+      hold. *)
+
+  type color = Red | Blk
+
+  type 'a t = Leaf | Node of (color * 'a t * 'a * 'a t)
+
+  let empty = Leaf
+
+  (** Efficiency : O(log n) *)
+  let rec mem x = function
+    | Leaf -> false
+    | Node (_, l, v, r) ->
+        if x < v then mem x l
+        else if x > v then mem x r
+        else true
+
+  (** [balance (c, l, v, r)] implement the four possible rotations that could
+      be necessary to balance a node and restore the RI clouse about Red nodes.
+      Efficiency : O(1) *)
+  let balance = function
+    | (Blk, Node (Red, Node (Red, a, x, b), y, c), z, d) (* 1 *)
+    | (Blk, Node (Red, a, x, Node (Red, b, y, c)), z, d) (* 2 *)
+    | (Blk, a, x, Node (Red, b, y, Node (Red, c, z, d))) (* 3 *)
+    | (Blk, a, x, Node (Red, Node (Red, b, y, c), z, d)) (* 4 *)
+      -> Node (Red, Node (Blk, a, x, b), y, Node (Blk, c, z, d))
+    | t -> Node t
+
+  (** Efficiency: O(log n) *)
+  let rec insert_aux x = function
+    | Leaf -> Node (Red, Leaf, x, Leaf) (* color new node red *)
+    | Node (c, l, v, r) as n ->
+        if x < v then balance (c, insert_aux x l, v, r)
+        else if x > v then balance (c, l, v, insert_aux x r)
+        else n
+
+  (** Efficiency: O(log n). *)
+  let insert x s =
+    match insert_aux x s with
+    | Leaf -> failwith "impossible"
+    | Node (_, l, v, r) -> Node (Blk, l, v, r) (* color root black *)
+end
+```
+
+## 8.36 Red-Black Tree Set Performance
+
+- `mem`: O(log n)
+  - Worst case: walk down longest path in tree
+  - Length of that path is at most 2 log (n + 1), which is O(log n)
+- `insert`: O(log n)
+  - Worst case: walk down then up one entire path, again O(log n)
+  - While walking up, each rotation is O(1)
+
+| Workload: | Ascending |       | Random |       |
+| --------- | --------- | ----- | ------ | ----- |
+|           | insert    | mem   | insert | mem   |
+| ListSet   | 22s       | 67s   | 23s    | 68s   |
+| BstSet    | 91s       | 87s   | 0.05s  | 0.04s |
+| RbSet     | 0.07 s    | 0.04s | 0.10s  | 0.04s |
+
+## 8.37 Implementing Maps with Red-Black Trees
+
+**Red-black map**
+
+- Store (key, value) pair at each node
+- Order as a BST by keys
+
+|                   | insert         | find          | remove         |
+| ----------------- | -------------- | ------------- | -------------- |
+| Association lists | O(1)           | O(n)          | O(n)           |
+| Arrays            | O(1)           | O(1)          | O(1)           |
+| Hash tables       | amortized O(1) | expected O(1) | amortized O(1) |
+| Red-black trees   | O(log n)       | O(log n)      | O(log n)       |
+
+- Arrays: fast, but keys must be integers
+- Association lists: allow any keys, but slow
+- Hash tables: fast, but requires good hash function; and worst-case performance relaxed to expected & amortized performance; and ephemral
+- Red-black trees: almost as fast, and persistent
+
+**Set implementations: performace**
+
+| Workload:          | Ascending |        | Random |        |
+| ------------------ | --------- | ------ | ------ | ------ |
+|                    | insert    | mem    | insert | mem    |
+| ListSet            | 22s       | 67s    | 23s    | 68s    |
+| BstSet             | 91s       | 87s    | 0.05s  | 0.04s  |
+| RbSet (functional) | 0.07 s    | 0.04s  | 0.10s  | 0.04s  |
+| HashSet (mutable)  | 0.008s    | 0.013s | 0.015s | 0.013s |
+
+***The answer of remaining question in 8.27*** : 
+
+***So if you really want the best possible performance mutability actually is essential***
+
+> Sir Tony Hoare [Turing Award Winner 1980] said
+>
+> "We should forget about small efficiencies, say about 97% of time: premature optimization is the root of all evil."
 
 # Ch9. Interpreters
 
@@ -4910,13 +5137,30 @@ end
 
 **CODE AS DATA** : *compiler is code that operate on data. That data is itself code.*
 
-<img src="./compilerArch.png" alt="image-20250227011320501" style="zoom: 50%;" />
+```
+        Source program
+              |
+              v
+          ----------
+         | Compiler |
+          ----------
+              |
+              v
+        Target program
+```
 
 **COMPILER GOES AWAY** : *not needed to run the program*
 
 ### 9.1.2 Interpreter
 
-<img src="./interpreterArch.png" alt="image-20250227011618980" style="zoom:50%;" />
+```
+        Source program
+              |
+              v
+         -------------
+Input ->| Interpreter | -> Output
+         -------------
+```
 
 **INTERPRETER STAYS** : *needed to run the program*
 
@@ -4925,17 +5169,35 @@ end
 - Compilers : 
   - primary job is translation
   - better performance
+  
 - Interpreters :
   - primary job is execution
   - easier implementation
 
 - Some times mixed : 
 
-<img src="./mix.png" alt="image-20250227012139705" style="zoom:50%;" />
+  ```
+           Source program
+                 |
+                 v
+             ----------
+            | Compiler |
+             ----------
+                 |
+                 v
+       Intermediate program
+                 |
+                 v
+           ---------------
+          |  Interpreter  |
+  Input ->|    (or say)   | -> Output
+  		|Virtual machine|
+  		 ---------------
+  ```
 
-***Intermediate program*** : java bytecode, OCaml .byte file etc.
+​	***Intermediate program*** : java bytecode, OCaml .byte file etc.
 
-***virtual machine*** : a kind of interpreter.
+​	***virtual machine*** : a kind of interpreter.
 
 - Some times even more nested : In fact, inside of the java VM, they've actually stuck a compiler if there's some code that's getting executed a whole lot, it can go ahead and compile that piece of the code down to the machine to get a better performance.
 
@@ -4953,10 +5215,61 @@ end
 **details**
 
 1. Lexical analysis with ***lexer***
-   - <img src="./Lexer.png" alt="image-20250227013316637" style="zoom:33%;" />
+
+   ```
+   Character stream:
+   if x = 0 then 1 else fact(x - 1)
+                \
+                 \
+                  \   -----------------
+                   ->|                 |
+                     |      Lexer      |
+                   --|                 |
+                  /   -----------------
+                 /
+                |
+                v
+   Token stream:
+    -------------------------------------------------------------
+   | if | x | = | 0 | then | 1 | else | fact | ( | x | - | 1 | ) |          
+    -------------------------------------------------------------
+   ```
 
 2. Syntactic analysis with ***parser***
-   - <img src="./Parser.png" alt="image-20250227013448332" style="zoom:33%;" />
+
+   ```
+   Token stream:
+    -------------------------------------------------------------
+   | if | x | = | 0 | then | 1 | else | fact | ( | x | - | 1 | ) |          
+    -------------------------------------------------------------
+                \
+                 \
+                  \   -----------------
+                   ->|                 |
+                     |      Parser     |
+                   --|                 |
+                  /   -----------------
+                 /
+                |
+                v
+   Abstract syntax tree:
+                    --------------
+                   | if-then-else |
+                    --------------
+                    /      |      \
+                   /       |       \
+                ---       ---      -----
+               | = |     | 1 |    |apply|
+                ---       ---      -----
+                / \                 /  \
+             ---   ---           ----   --- 
+            | x | | 0 |         |fact| | - |
+             ---   ---           ----   ---
+                                        / \
+                                      ---  ---
+                                     | x || 1 |
+                                      ---  ---
+   ```
 
 3. **Semantic analysis** on AST
 
