@@ -1,6 +1,8 @@
 # OCaml Programming [Cornell CS3110]
 
-# Ch0 OCaml build (the build example of 8.3
+# Ch0. OCaml build
+
+## 0.1 the build example of 8.3
 
 1. preparation
 
@@ -74,6 +76,9 @@ $cd maps && tree -L 2
 - if no `public_name`, it only can execute by `dune exec ./main.exe`
 
 8. `dune build` then  `dune runtest`(test) and `dune exec maps`(exec)
+
+- `dune exec test/maps_test.exe` to directly run test executable
+- `dune exec bin/main.exe` to directly run main executable
 
 # Ch2. The Basics of OCaml
 
@@ -3782,7 +3787,7 @@ let vec_add'' v1 v2 = Array.map2 (+.) v1 v2
   - `{k1 : v1, k2 : v2, ..., kn : vn}`
 
 ```ocaml
-(* maps.ml *)
+(* maps/lib/maps.ml *)
 
 module type Map = sig
   (** [t] is the type of maps that bind keys of type ['k]
@@ -3827,7 +3832,1073 @@ For each implementation :
 - What are the representation invariants ?
 - What is the efficiency of each operation ?
 
-## 8.3 Association Lists_ Rep Type
+## 8.3 & 8.4 Association Lists_ Rep Type and Bindings
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module AssocListMap : Map = struct
+  (** AF : [[(k1, v1), (k2, v2), ... (kn, vn)]] is the map
+      {k1 : v1, k2 : v2, ..., kn : vn}. If a key apperars
+      more than once in the list, then in the map it is bound
+      to the left-most occurrence in the list. For example,
+      [[(k, v1); (k, v2)]] represents the map {k : v1}. The
+      empty list represents the empty map.
+      RI : none *)
+  type ('k, 'v) t = ('k * 'v) list
+
+  let insert _ _ _ = failwith "unimplemented"
+
+  let find _ _ = failwith "unimplemented"
+
+  let remove _ _ = failwith "unimplemented"
+
+  let empty = []
+
+  let of_list _ = failwith "unimplemented"
+
+  (** [keys m] is a list of the keys in [m], without any duplicate. *)
+  let keys m = m |> List.map fst |> List.sort_uniq Stdlib.compare
+
+  (** [binding m k] is [(k, v])], where [v] is the value that
+      [k] binds in [m].
+      Requires: [k] is a key in [m]. *)
+  let binding m k = (k, List.assoc k m)
+
+  let bindings m = List.map (binding m) (keys m)
+
+end
+```
+
+```dune
+; maps/lib/dune
+
+(library
+ (name maps)
+ (modules maps))
+```
+
+```ocaml
+(* maps/test/maps_test.ml *)
+
+open OUnit2
+open Maps
+
+let assoc_tests = let open AssocListMap in [
+  "empty has no bindings" >:: fun _ -> assert_equal [] (bindings empty);
+
+]
+
+let suite = "map suite" >::: assoc_tests
+
+let _ = run_test_tt_main suite
+```
+
+```dune
+; maps/test/dune
+
+(test
+ (name maps_test)
+ (libraries ounit2 maps)
+ (modules maps_test))
+```
+
+## 8.5 Association Lists_ Of List
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+let of_list lst = lst
+
+(* ... *)
+```
+
+```ocaml
+(* maps/test/maps_test.ml *)
+
+open OUnit2
+open Maps
+
+let bindings_test name output input =
+  name >:: fun _ ->
+    assert_equal output (AssocListMap.bindings input)
+
+let assoc_tests = let open AssocListMap in [
+  bindings_test "empty has no bindings" [] empty;
+
+  let lst = [(3110, "fun")] in
+  bindings_test "singleton list has 1 binding" lst (of_list lst)
+]
+
+let suite = "map suite" >::: assoc_tests
+
+let _ = run_test_tt_main suite
+```
+
+## 8.6 Association Lists_ Improving Tests, and TDD
+
+```ocaml
+(* maps/test/maps_test.ml *)
+
+open OUnit2
+open Maps
+
+let cmp_set_like_lists lst1 lst2 =
+  let uniq1 = List.sort_uniq compare lst1 in
+  let uniq2 = List.sort_uniq compare lst2 in
+  List.length lst1 = List.length uniq1
+  &&
+  List.length lst2 = List.length uniq2
+  &&
+  uniq1 = uniq2
+
+(** [pp_string s] pretty-prints string [s]. *)
+let pp_string s = "\"" ^ s ^ "\""
+
+(** [pp_list pp_elt lst] pretty-prints list [lst], using [pp_elt]
+    to pretty-prints each element of [lst]. *)
+let pp_list pp_elt lst =
+  let pp_elts lst =
+    let rec loop n acc = function
+      | [] -> acc
+      | [h] -> acc ^ pp_elt h
+      | h1 :: t ->
+          if n = 100 then acc ^ "..."
+          else loop (n + 1) (acc ^ (pp_elt h1) ^ "; ") t
+    in loop 0 "" lst
+  in "[" ^ pp_elts lst ^ "]"
+
+(** [pp_pair pp1 pp2 (a, b)] pretty-prints [(a, b)] using [pp1]
+    for [a] and [pp2] for [b]. *)
+let pp_pair pp1 pp2 (a, b) =
+  pp1 a ^ pp2 b
+
+
+let bindings_test name output input =
+  name >:: fun _ ->
+    assert_equal output (AssocListMap.bindings input)
+    ~printer:(pp_list (pp_pair string_of_int pp_string))
+    ~cmp:cmp_set_like_lists
+
+
+let lst1 = [(3110, "fun")]
+let lst2 = [(3110, "fun"); (2110, "00")]
+let lst3 = [(3110, "fun"); (2110, "00"); (2110, "01")]
+
+let assoc_tests = let open AssocListMap in [
+  bindings_test "empty has no bindings" [] empty;
+  bindings_test "singleton list has 1 binding" lst1 (of_list lst1);
+  bindings_test "list with 2 bindings" lst2 (of_list lst3)
+]
+
+let suite = "map suite" >::: assoc_tests
+
+let _ = run_test_tt_main suite
+```
+
+## 8.7 Association Lists_ Insert, Find and Remove
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module AssocListMap : Map = struct
+  (** AF : [[(k1, v1), (k2, v2), ... (kn, vn)]] is the map
+      {k1 : v1, k2 : v2, ..., kn : vn}. If a key apperars
+      more than once in the list, then in the map it is bound
+      to the left-most occurrence in the list. For example,
+      [[(k, v1); (k, v2)]] represents the map {k : v1}. The
+      empty list represents the empty map.
+      RI : none *)
+  type ('k, 'v) t = ('k * 'v) list
+
+  (** Efficiency : O(1) *)
+  let insert k v m = (k, v) :: m
+
+  (** Efficiency : O(n) *)
+  let find = List.assoc_opt
+
+  (** Efficiency : O(n) *)
+  let remove k m = List.filter (fun (k', _) -> k <> k') m
+
+  let empty = []
+
+  let of_list lst = lst
+
+  (** [keys m] is a list of the keys in [m], without any duplicate.
+      Efficiency : O(n log n). *)
+  let keys m = m |> List.map fst |> List.sort_uniq Stdlib.compare
+
+  (** [binding m k] is [(k, v])], where [v] is the value that
+      [k] binds in [m].
+      Requires: [k] is a key in [m].
+      Efficiency: O(n). *)
+  let binding m k = (k, List.assoc k m)
+
+  (** Efficiency: O(n log n) + O(n) + O(n), which is O(n^2)*)
+  let bindings m = List.map (binding m) (keys m)
+
+end
+```
+
+## 8.8 Direct Address Map ADT
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module type DirectAddressMap = sig
+  (** [t] is the type of maps that bind keys of type int
+      to values of type ['v]. *)
+  type 'v t
+
+  (** [insert k v m] mutates map m to bind [k] to [v].
+      If [k] was already bound in [m], that binding is replaced
+      by the binding to [v] in the new map. *)
+  val insert : int -> 'v -> 'v t -> unit
+
+  (** [find k m] is [Some v] if [k] is bound to [v] in [m]
+      and [None] if not. *)
+  val find : int -> 'v t -> 'v option
+
+  (** [remove k m] mutates [m] to remove any binding of [k].
+      If [k] was not bound in [m], then the map is unchanged. *)
+  val remove : int -> 'v t -> 'v t
+
+  (** [emtpy] is the emtpy map *)
+  val empty : 'v t
+
+  (** [of_list lst] is a map containing the same bindings as
+      association list [lst].
+      Requires : [lst] does not contain any duplicate keys. *)
+  val of_list : (int * 'v) list -> 'v t
+
+  (** [bindings m] is an association list containing the same
+      binddings as [m]. There are no duplicate keys in the list*)
+  val bindings : 'v t -> (int * 'v) list
+end
+```
+
+## 8.9 Array Map_ Rep Type, and Create
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module type DirectAddressMap = sig
+  (** [t] is the type of maps that bind keys of type int
+      to values of type ['v]. *)
+  type 'v t
+
+  (** [insert k v m] mutates map m to bind [k] to [v].
+      If [k] was already bound in [m], that binding is replaced
+      by the binding to [v] in the new map.
+      Requires: [k] is bound for [m]. *)
+  val insert : int -> 'v -> 'v t -> unit
+
+  (** [find k m] is [Some v] if [k] is bound to [v] in [m]
+      and [None] if not.
+      Requires: [k] is bound for [m]. *)
+  val find : int -> 'v t -> 'v option
+
+  (** [remove k m] mutates [m] to remove any binding of [k].
+      If [k] was not bound in [m], then the map is unchanged.
+      Requires: [k] is bound for [m]. *)
+  val remove : int -> 'v t -> unit
+
+  (** [create c] creates a map with capacity [c]. Keys [0] through
+      [c-1] are _in bound_ for the map. *)
+  val create : int -> 'v t
+
+  (** [of_list c lst] is a map containing the same bindings as
+      association list [lst]. and with capacity [c].
+      Requires : [lst] does not contain any duplicate keys,
+    and every key in [lst] is in bounds for capacity [c]. *)
+  val of_list : int -> (int * 'v) list -> 'v t
+
+  (** [bindings m] is an association list containing the same
+      binddings as [m]. There are no duplicate keys in the list*)
+  val bindings : 'v t -> (int * 'v) list
+end
+
+module ArrayMap : DirectAddressMap = struct
+  (** AF: [[|Some v0; Some v1; ... |]] represents {0 : v0, 1 : v1, ...}.
+      If element [i] of the array is instead [None], then [i] is not bound
+      in the map.
+      RI: None.
+  *)
+  type 'v t = 'v option array
+
+  let insert _ _ _ = failwith "TODO"
+
+  let find = failwith "TODO"
+
+  let remove _ _ = failwith "TODO"
+
+  (** Efficiency : O(c) *)
+  let create c = Array.make c None
+
+  let of_list _ _ = failwith "TODO"
+  
+  let bindings _ = failwith "TODO"
+end
+```
+
+## 8.10 Array Map_ Remaining Operations
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module ArrayMap : DirectAddressMap = struct
+  (** AF: [[|Some v0; Some v1; ... |]] represents {0 : v0, 1 : v1, ...}.
+      If element [i] of the array is instead [None], then [i] is not bound
+      in the map.
+      RI: None.
+  *)
+  type 'v t = 'v option array
+
+  (** Efficiency : O(1) *)
+  let insert k v a = a.(k) <- Some v
+
+  (** Efficiency : O(1) *)
+  let find k a = a.(k)
+
+  (** Efficiency : O(1) *)
+  let remove k a = a.(k) <- None
+
+  (** Efficiency : O(c) *)
+  let create c = Array.make c None
+
+  (** Efficiency : O(c) *)
+  let of_list c lst =
+    let a = create c in
+    List.iter (fun (k, v) -> insert k v a) lst; a
+
+  (** Efficiency : O(c) *)
+  let bindings a =
+    let b = ref [] in
+    for k = 0 to (Array.length a) - 1 do
+      match a.(k) with
+      | None -> ()
+      | Some v -> b := (k, v)::!b
+    done;
+    !b
+end
+```
+
+## 8.11 Association Lists v.s. Arrays
+
+|                       | insert | find | remove |
+| --------------------- | ------ | ---- | ------ |
+| Association lists     | O(1)   | O(n) | O(n)   |
+| Direct-address tables | O(1)   | O(1) | O(1)   |
+
+Direct-address tables
+
+- keys must be integers
+- fast
+- high space requirements
+
+Association lists
+
+- allow any keys
+- but slow
+
+## 8.12 Hash Table Rep Type v1
+
+**Key idea : convert keys to integers**
+
+- Assume we have a conversion function
+
+​	`hash : 'k -> int`
+
+- Want to implement insert by
+  - hashing key to int within array bounds
+  - storing binding at that index
+- Conversion should be fast : ideally, constant time
+- But what if two keys hash to same index ?
+  - Integer output of hash called a bucket
+  - If hash function not injective, multiple keys will collide at same bucket
+  - We're okay with collisions
+
+**Dealing with collisions**
+
+- **Probing**: find an empty bucet somewhere else
+  - aka *closed hashing, open addressing*
+  - traditionally more common for hardware implementations
+- **Chaining**: store mulitiple key-value pairs in a list at a bucket
+  - aka *open hashing, closed addressing*
+  - OCaml's Hashtbl does this
+  - Let's do it ...
+
+**Hash table rep type v1**
+
+- Representation type combines association list with array:
+
+​	`type ('k, 'v) t = ('k * 'v) list array`
+
+- AF : An array `[| [(k11, v11); (k12, v12); ...]; [(k21, v21); (k22, v22); ...]; ... |]` represents the map `{k11:v11, k12:v12, ..., k21:v21, k22:v22, ..., ... }`
+- RI : No key appears more than once in array. All keys are in the right buckets: if k is in bucket b then hash(k) = b
+
+## 8.13 Hash Table Rep Type v2
+
+**Algorithms**
+
+- `Insert (k, v)`:
+  - Hash k to find bucket b
+  - Search through b to delete any previous binding of k (to maintain RI)
+  - Mutate bucket to add new binding of k
+- `Find k`:
+  - Hash k to find bucket b
+  - Search through b to find binding of k
+- `Remove k`:
+  - Hash k to find bucket b
+  - Search through b to delete any binding of k
+
+Every operation requires search through bucket
+
+Efficiency depends on the bucket length
+
+**Load factor (# bindings / # buckets)**
+
+- #bindings not under implementer's control
+- but #buckets is
+- When load factor gets above some constant, make array bigger
+  - which makes load factor smaller
+  - Then redistribute keys across bigger array
+
+**Hash table rep type v2**
+
+- Resizing requires a new representation type:
+
+​	`type ('k, 'v) t = {mutable buckets : ('k * 'v) list array}`
+
+- Mutate an `array` element to `insert` or `remove`
+- Mutate `buckets` field to resize
+
+## 8.14 Rehashing
+
+- If load factor exceeds some constant (e.g. 2) then:
+  - double `array` size
+  - rehash elements into new buckets
+  - thus halving load factor (e.g. 1)
+- OCaml `Hashtbl` : resize at load factor of 2
+- Java `HashMap` : resize at load factor of 0.75
+- Higher resize threshold decreases space requirements but increase time
+
+---
+
+- If load factor below some constant (e.g. 0.5) then:
+  - half array size
+  - rehash elements into new buckets
+  - thus double load factor (e.g. 1)
+- Textbook idea
+- Neither OCaml nor Java do this
+
+## 8.15 Hash Table Interface
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module type TableMap = sig
+  (** [('k, 'v) t] is the type of mutable table_based maps that
+      bind keys of type ['k] to values of type ['v]. *)
+  type ('k, 'v) t
+
+  (** [insert k v m] mutates map [m] to bind [k] to [v]. If [k]
+      was already bound in [m], that binding is replaced by the
+      binding to [v]. *)
+  val insert : 'k -> 'v -> ('k, 'v) t -> unit
+
+  (** [find k m] is [Some v] if [m] binds [k] to [v], and [None]
+      if [m] does not bind [k]. *)
+  val find : 'k -> ('k, 'v) t -> 'v option
+
+  (** [remove k m] mutates [m] to remove any binding of [k].
+      If [k] was not bound in [m], the map is unchanged. *)
+  val remove : 'k -> ('k, 'v) t -> unit
+
+  (** [create hash c] creates a new table map with capacity [c]
+      that will use [hash] as the function to convert keys to
+      integers.
+      Requires: [hash] distributes keys uniformly over integers.*)
+  val create : ('k -> int) -> int -> ('k, 'v) t
+end
+```
+
+## 8.16 Hash Table Insert Implementation
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module HashMap : TableMap = struct
+  (** AF : If [buckets] is
+      [|[(k11, v11); (k12, v12); ...];
+        [(k21, v21); (k22, v22); ...];
+        ... |]
+      represents the map
+      {k11:v11, k12:v12, ...,
+       k21:v21, k22:v22, ...,
+       ... }
+      RI : No key appears more than once in array.
+      All keys are in the right buckets: if [k] is in [buckets]
+      at index [b] then [hash[k] = b]. *)
+  type ('k, 'v) t = {
+    hash : 'k -> int;
+    mutable size : int;
+    mutable buckets : ('k * 'v) list array
+  }
+
+  (** [capacity tab] is the number of buckets in [tab].
+      Efficiency : O(1). *)
+  let capacity tab = Array.length tab.buckets
+
+  (** [index k tab] is the index at which key [k] should be stored
+      in the buckets of [tab].
+      Efficiency : O(1). *)
+  let index k tab = tab.hash k mod (capacity tab)
+
+  (** [insert_no_resize k v tab] inserts a binding from [k] to
+      [v] in [tab] and does not resize the table, regradless of
+      what happens to the load factor.
+      Efficiency : expected O(L) *)
+  let insert_no_resize k v tab =
+    let b = index k tab in
+      let old_bucket = tab.buckets.(b) in
+        tab.buckets.(b) <- (k, v) :: List.remove_assoc k old_bucket;
+        if not (List.mem_assoc k old_bucket) then
+          tab.size <- tab.size + 1;
+        ()
+
+  let insert _ _ _ = failwith "TODO"
+
+  let find _ _ = failwith "TODO"
+
+  let remove _ _ = failwith "TODO"
+
+  (** Efficiency : O(c) *)
+  let create h c = {
+    hash = h;
+    size = 0;
+    buckets = Array.make c []
+  }
+end
+```
+
+## 8.17 Hash Table Resize Implementation
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+(** [capacity tab] is the number of buckets in [tab].
+      Efficiency : O(1). *)
+  let capacity tab = Array.length tab.buckets
+
+  (** [index k tab] is the index at which key [k] should be stored
+      in the buckets of [tab].
+      Efficiency : O(1). *)
+  let index k tab = tab.hash k mod (capacity tab)
+
+  (** [insert_no_resize k v tab] inserts a binding from [k] to
+      [v] in [tab] and does not resize the table, regradless of
+      what happens to the load factor.
+      Efficiency : expected O(L) *)
+  let insert_no_resize k v tab =
+    let b = index k tab in
+    let old_bucket = tab.buckets.(b) in
+    tab.buckets.(b) <- (k, v) :: List.remove_assoc k old_bucket;
+    if not (List.mem_assoc k old_bucket) then
+      tab.size <- tab.size + 1;
+    ()
+
+  (** [load_facter tab] is the load factor of [tab], i.e.,
+      the number of bindings divided by the number of buckets. *)
+  let load_facter tab =
+    (float_of_int tab.size) /. (float_of_int (capacity tab))
+
+  (** [rehash tab new_capacity] replaces the buckets array of [tab]
+      with a new array of size [new_capacity], and re-inserts all the
+      bindings of [tab] into new array. The keys are re-hashed, so then
+      bindings are likely to land in new buckets.
+      Efficiency : expected O(n), where n is the number of binddings in the table*)
+  let rehash tab new_capacity =
+    (* insert (k, v) into table *)
+    let rehash_binding (k, v) =
+      insert_no_resize k v tab
+    in
+    (* insert all bingdings of [b] into tab *)
+    let rehash_bucket b =
+      List.iter rehash_binding b
+    in
+    let old_bucket = tab.buckets in
+    tab.buckets <- Array.make new_capacity []; (* O(n) *)
+    tab.size <- 0;
+    Array.iter rehash_bucket old_bucket (* expected O(n) *)
+
+  (** [resize_if_needed tab] resizes and rehashed [tab] if the load
+      factor is too big or too small. Load factors are allowed to range
+      from 1/2 to 2. *)
+  let resize_if_needed tab =
+    let lf = load_facter tab in
+    if lf > 2.0 then
+      rehash tab (capacity tab * 2)
+    else if lf < 0.5 then
+      rehash tab (capacity tab / 2)
+    else
+      ()
+
+  let insert k v tab =
+    insert_no_resize k v tab;
+    resize_if_needed tab
+    
+(* ... *)
+```
+
+## 8.18 Hash Table Find and Remove
+
+```ocaml
+(* maps/lib/maps.ml *)
+(* ... *)
+
+module HashMap : TableMap = struct
+  (** AF : If [buckets] is
+      [|[(k11, v11); (k12, v12); ...];
+        [(k21, v21); (k22, v22); ...];
+        ... |]
+      represents the map
+      {k11:v11, k12:v12, ...,
+       k21:v21, k22:v22, ...,
+       ... }
+      RI : No key appears more than once in array.
+      All keys are in the right buckets: if [k] is in [buckets]
+      at index [b] then [hash[k] = b]. *)
+  type ('k, 'v) t = {
+    hash : 'k -> int;
+    mutable size : int;
+    mutable buckets : ('k * 'v) list array
+  }
+
+  (** [capacity tab] is the number of buckets in [tab].
+      Efficiency : O(1). *)
+  let capacity tab = Array.length tab.buckets
+
+  (** [index k tab] is the index at which key [k] should be stored
+      in the buckets of [tab].
+      Efficiency : O(1). *)
+  let index k tab = tab.hash k mod (capacity tab)
+
+  (** [insert_no_resize k v tab] inserts a binding from [k] to
+      [v] in [tab] and does not resize the table, regradless of
+      what happens to the load factor.
+      Efficiency : expected O(L) *)
+  let insert_no_resize k v tab =
+    let b = index k tab in
+    let old_bucket = tab.buckets.(b) in
+    tab.buckets.(b) <- (k, v) :: List.remove_assoc k old_bucket;
+    if not (List.mem_assoc k old_bucket) then
+      tab.size <- tab.size + 1;
+    ()
+
+  (** [load_facter tab] is the load factor of [tab], i.e.,
+      the number of bindings divided by the number of buckets. *)
+  let load_facter tab =
+    (float_of_int tab.size) /. (float_of_int (capacity tab))
+
+  (** [rehash tab new_capacity] replaces the buckets array of [tab]
+      with a new array of size [new_capacity], and re-inserts all the
+      bindings of [tab] into new array. The keys are re-hashed, so then
+      bindings are likely to land in new buckets.
+      Efficiency : expected O(n), where n is the number of binddings in the table*)
+  let rehash tab new_capacity =
+    (* insert (k, v) into table *)
+    let rehash_binding (k, v) =
+      insert_no_resize k v tab
+    in
+    (* insert all bingdings of [b] into tab *)
+    let rehash_bucket b =
+      List.iter rehash_binding b
+    in
+    let old_bucket = tab.buckets in
+    tab.buckets <- Array.make new_capacity []; (* O(n) *)
+    tab.size <- 0;
+    Array.iter rehash_bucket old_bucket (* expected O(n) *)
+
+  (** [resize_if_needed tab] resizes and rehashed [tab] if the load
+      factor is too big or too small. Load factors are allowed to range
+      from 1/2 to 2. *)
+  let resize_if_needed tab =
+    let lf = load_facter tab in
+    if lf > 2.0 then
+      rehash tab (capacity tab * 2)
+    else if lf < 0.5 then
+      rehash tab (capacity tab / 2)
+    else
+      ()
+
+  let insert k v tab =
+    insert_no_resize k v tab;
+    resize_if_needed tab
+
+  let find k tab =
+    List.assoc_opt k tab.buckets.(index k tab)
+
+  (** [remove_no_resize k tab] removes [k] from [tab] and does not
+      trigger a resize, regradless of what happens to the load factors.
+      Efficiency : expected O(L). *)
+  let remove_no_resize k tab =
+    let b = index k tab in
+    let old_bucket = tab.buckets.(b) in
+    tab.buckets.(b) <- List.remove_assoc k tab.buckets.(b);
+    if List.mem_assoc k old_bucket then
+      tab.size <- tab.size - 1;
+    ()
+
+  (** Efficiency: O(n). *)
+  let remove k tab =
+    remove_no_resize k tab;
+    resize_if_needed tab
+
+  (** Efficiency : O(c). *)
+  let create h c = {
+    hash = h;
+    size = 0;
+    buckets = Array.make c []
+  }
+end
+```
+
+## 8.19 Hash Tables vs Other Data Structures for Maps
+
+|                            | insert | find          | remove |
+| -------------------------- | ------ | ------------- | ------ |
+| Association lists          | O(1)   | O(n)          | O(n)   |
+| Direct-address tables      | O(1)   | O(1)          | O(1)   |
+| Hash tables with chainging | O(n)   | expected O(1) | O(n)   |
+
+Direct-address tables
+
+- keys must be integers
+- fast
+- high space requirements
+
+Association lists
+
+- allow any keys
+- but slow
+
+Hash tables with chaining
+
+- allow any keys
+- fast if good hash function
+- **seemingly** linear insert and remove
+
+## 8.20 Hash Functions
+
+Three steps to transform key to bucket index:
+
+1. Seralize key into a stream of bytes
+   - **should be injective**
+2. Diffuse bytes into a single large integer
+   - small change to key should cause large, unpredictable change in integer
+   - **might lose injective** here, but good diffusion into an int64 is likely to still be injective
+3. Compress the integer to be within range of bucket indices
+   - dependence on number of buckets: need to map from key to [0... m - 1]
+   - **definitely lose injectivity**
+
+*Responsibility for each step is typically divided between client and implementer ...*
+
+**Responsibility**
+
+OCaml Hashtbl: 
+
+- function Hashtbl.hash : `'a -> int` does serialization and diffusion in native C code (based on MurmurHash)
+- function Hashtbl.key_index does compression
+- so implementer is responsible for everthing
+
+OCaml Hashtbl.Make:
+
+- functor with input signature Hashtbl.HashedType, with functions
+  - equal : `t -> t -> bool` and
+  - hash : `t -> int`
+- client provides equal and hash to do serialization and diffusion
+  - mush guarantee that if two keys are equal they have the same hash
+- so implementer is responsible only for compression
+
+**Hashing is hard**
+
+- If you don't achieve good diffusion, you lose constant-time performance
+- If your hash function isn't constant time, you lose constant-time performance !
+- If you don't obey ***equals invariant***, whether Java or OCaml, you lose correctness !
+
+## 8.21 Efficiency Analysis of Rehashing
+
+**Hash table resize cost** = n O(1) [rehash] + n O(1) [reinsert] which is **O(n)**
+
+Suppose the hidden constant in big-O is r
+
+- r = x + y + z
+- x is cost to allocate bucket
+- y is cost to hash key
+- z is cost to insert binding
+
+*Could we bring cost of resize down to O(1) ?*
+
+## 8.22 Amortized Analysis of Hash Tables
+
+- Key idea to analyze worst-case efficiency of 
+  - sequence of operations
+  - not individual operations
+- Rara expensive operations paid for by
+  - common inexpensive operations
+
+**Hash table efficiency**
+
+- find: expected O(1)
+- insert and remove : amortized O(1)
+
+## 8.23 The Idea of Amortized Analysis
+
+- Amortize: put aside money at intervals for gradual payment of debt [Webster's 1964]
+- As applied to efficienty analysis:
+  - pay extra "money" for some operations as a credit
+  - use that credit to pay highter cost of some later operations
+- Invented by Sleator and Tarjan (1985)
+
+## 8.24 Amortized Analysis of Two-list Queues
+
+- Rep type:
+  - front of queue: list, stored in order
+  - back of queue: list, stored in reverse order
+- RI: if front is empty then back is empty
+
+**Two-list queues efficiency**
+
+- Peek: head of front O(1)
+- Enqueue: cons onto back O(1)
+  - But if completely empty, cons onto front instead to maintain RI O(1)
+- Dequeue: tail of front O(1)
+  - If front becomes empty, reverse back and make it the front to maintain RI O(n)
+
+## 8.25 Theory of Amortized Analysis
+
+**Theory of amortized bound**
+
+- Analyze ***actual cost*** of each operation
+- Define ***amortized cost*** of each operation
+- Prove that amortized costs are conservative bounds:
+  - ***sum of amortized cost of sequence >= sum of actual cost of sequence***
+
+**Amortized bounds: Queue**
+
+- From the code:
+  - actual cost of enqueue: 1
+  - actual cost of dequeue: either 1, or 1 + length of back
+- From our imagination
+  - amortized cost of enqueue: 2 (1 actual cost and 1 credits saved)
+  - amortized cost of dequeue: 1
+
+## 8.26 Two Ways to Prove Amortized Cost : Banders and Physicists
+
+### 8.26.1 Banker's method
+
+- Metaphorically store credits in bank account at each location in data structure
+- Amortized cost of operation is defined as : (actual cost + credits saved) - (credits spent)
+- Prove that no operation make account balances negative
+
+Define how many credits each opertaion {saves, spends}:
+
+- **Queue**: enqueue saves 1 credit in element, dequeue spends 1 credit to move from back to front
+- **Hash table**: insert saves 2 credits with each binding, and spends those credits at time of rehash to re-insert that binding **plus** one other that was added before previous rehash (help all previous rehash elements to rehash now, because number of elements become twice than that of pervious rehash)
+
+### 8.26.2 Physicist's method
+
+- Metaphorically entire data structure has a potential energy
+- Amortized cost of operation defined as : actual cost + change in potential energy
+- Prove that potential energy is never negative
+
+...
+
+### 8.26.3 Bankers v.s. Physicists
+
+- Equivalent in power
+- Bankers -> Physicists:
+  - potential energy := total credits
+- Physicists -> Bankers:
+  - credits in special location = potential energy
+
+## 8.27 Functional Maps and Sets 
+
+|                            | insert         | find          | remove         |
+| -------------------------- | -------------- | ------------- | -------------- |
+| Association lists          | O(1)           | O(n)          | O(n)           |
+| Direct-address tables      | O(1)           | O(1)          | O(1)           |
+| Hash tables with chainging | amortized O(1) | expected O(1) | amortized O(1) |
+
+- Association lists: allow any keys, but slow; ***functional***
+- Arrays: fast, but keys must be integers; ***mutable***
+- Hash table: fast, but requires good hash funtion; worst-case performance relaxed to expected & amortized performance; ***mutable***
+
+> functional equals immutable and operations do return new data structure rather than unit.
+
+---
+
+Could we do at least as well or better than Hash table (mutable data structure) with a functional data structure ?
+
+Well, we're probably not going to do any better than constant time .. But, 
+
+***how efficient could a functional map be ?***
+
+### 8.27.1 Maps and Sets
+
+- A map abstractly is just a set of bindings {k1 : v1, k2 : v2, ...}
+- Ignore the values, and you have a set {k1, k2, ...}
+- ***So map and set data structure are largely interchangeable***
+- For simpicity we'll develop ***functional sets*** first
+
+### 8.27.2 Sets Functional Implementation
+
+```ocaml
+(* sets/lib/sets.ml *)
+
+module type Set = sig
+  (** ['a t] is the type of sets whose elements have type ['a]. *)
+  type 'a t
+
+  (** [empty] is empty set *)
+  val empty : 'a t
+
+  (** mem x s is whether [x] is the member of [s]. *)
+  val mem : 'a -> 'a t -> bool
+
+  (** [insert x s] is the set containting [x] as well as all
+      elements of [s]. *)
+  val insert : 'a -> 'a t -> 'a t
+end
+
+module ListSet : Set = struct
+  (** AF : [[x; ...; xn]] represents the set {x1, ..., xn}.
+      RI: the list contains no duplicates. *)
+  type 'a t = 'a list
+
+  let empty = []
+
+  (** Efficiency : O(n) *)
+  let mem = List.mem
+
+  (** Efficiency: O(n) *)
+  let insert x s =
+    if mem x s then s else x :: s
+end
+```
+
+## 8.28 Binary Search Trees
+
+### 8.28.1 Linear v.s. binary search with arrays
+
+- Linear search:
+  - Scan through entire array:
+  - Linear running time: O(n)
+- Binary search:
+  - Repeatedly half the search space
+  - Logarithmic running time: O(log n)
+
+### 8.28.2 Binary search tree (BST)
+
+- Binary tree: every node has two subtrees
+- BST invariant:
+  - all values in left subtree are less than v
+  - all values in right subtree are greater than v
+
+```ocaml
+(* sets/lib/sets.ml *)
+(* ... *)
+
+module BstSet : Set = struct
+  (** AF : [Leaf] represents the empty set. [Node (l, v, r)] represents
+      the set containing [v] as well as all the elements of the sets
+      represents by [l] and [r].
+      RI : for every [Node (l, v, r])], all the values in [l] are strictly
+      less than [v], and all the values in [r] are strictly greater than [v].*)
+  type 'a t = Leaf | Node of 'a t * 'a * 'a t
+
+  let empty = Leaf
+
+  let rec mem x = function
+    | Leaf -> false
+    | Node (l, v, r) ->
+        if x < v then mem x l
+        else if x > v then mem x r
+        else true
+
+  let rec insert x = function
+    | Leaf -> Node (Leaf, x, Leaf)
+    | Node (l, v, r) as n->
+        if x < v then Node (insert x l, v, r) (* error : if x < v then insert x l *)
+        else if x > v then Node (l, v, insert x r)
+        else n
+end
+```
+
+## 8.29 Binary Search Tree Efficiency
+
+- Efficiency depend on Tree shape
+- Tree shape depend on insertion order
+
+**Set implementations: performance**
+
+| Workload: | Ascending |      | Random |       |
+| --------- | --------- | ---- | ------ | ----- |
+|           | insert    | mem  | insert | mem   |
+| ListSet   | 22s       | 67s  | 23s    | 68s   |
+| BstSet    | 91s       | 87s  | 0.05s  | 0.04s |
+
+- insert and mem are both O(n)
+- But if trees always had short paths instead of long paths, could be better: O(log n)
+- How could we ensure short paths ?
+  - i.e. balance trees so they don't lean
+
+## 8.30 Binary Search Tree
+
+**Strategies for achieving balance**
+
+- In general:
+  - Strengthen the RI to require balance
+  - And modify insert to guarantee it
+- Well-known data structures:
+  - 2-3 trees: all paths have ***same length***
+  - AVL trees: length of shortest and longest path from any node ***differ at most by one*** (Invented by Georgy **A**delson-**V**elsky and Evgenii **L**andis, whernce the acronym)
+  - Red-black trees: length of shortest and longest path from any node ***differ at most by factor of two***
+
+## 8.31 Red-Black Trees
+
+- [Guibas and Sdgewick 1978], [Okasaki 1998]. later is functional version
+- Red-black tree is **Binary search tree** with:
+  - **Each node colored red or black**
+  - **Leaves and root colored black (Leaves always refer to nullptr in cpp)**
+    - only an Inference of Red-black RI
+
+**Red-black RI**
+
+- **BST** with either Red or Black node
+- **Local invariant**: No red node has a red child
+- **Global invariant**: Every path from the root to a leaf has the same number of black nodes
+  - Note : Global invariant is an example of why we don't check the entire precondition (costly and not necessarily)
+
+**Path length** (result from Res-black RI)
+
+- Lemma: the length of the longest path in a red-black tree is at most twice length of the shortest path.
+  - e.g., B-B-B-B v.s. B-R-B-R-B-R-B
+- Theorem: the maximum depth of a node in a red-black tree of size n is at most 2 * ceil(log(n + 1))
+- So red-black trees are balanced
+- And operations generally run in O(log n ) time.
+
+## 8.32 Red-Black Tree Implementation_ Rep Type, Empty, Mem
 
 
 
