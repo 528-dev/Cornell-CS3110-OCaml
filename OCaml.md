@@ -1,8 +1,12 @@
 # OCaml Programming [Cornell CS3110]
 
-# Ch0. OCaml build
+# Ch0. OCaml Development Environment
 
-## 0.1 the build example of 8.3
+## 0.1 Build OCaml Project
+
+Since this lecture was recorded some time ago (this note written in 2025.3), the development environment in the video is relatively outdated. Here is a brief explanation of how to use the latest development environment to reproduce the course code.
+
+Using the example of 8.3 to illustrate:
 
 1. preparation
 
@@ -44,7 +48,7 @@ $cd maps && tree -L 2
 - `lib` and `bin` contain source code files, for libraries and programs, respectively.
 - All the build artifacts, and a copy of sources, are stored in the _build directory. Don't touch it.
 
-4. edit `lib/maps.ml` and `test/maps_test.ml` (see in 8.3)
+4. edit `lib/maps.ml` and `test/maps_test.ml` (see 8.3)
 5. edit `test/dune`:
 
 ```dune
@@ -79,6 +83,88 @@ $cd maps && tree -L 2
 
 - `dune exec test/maps_test.exe` to directly run test executable
 - `dune exec bin/main.exe` to directly run main executable
+
+## 0.2 Utop
+
+**UTOP** is a modern and interactive **OCaml** toplevel (REPL) designed to enhance the OCaml programming experience.
+
+type `utop` in shell to enter utop, then type in utop:
+
+- `#directory "dirname"` : add a directory in current utop session
+- `#use "file.ml"`: excute `file.ml` line by line in current utop session
+- `#require "libname"`: link `libname` lib in current utop session
+- `command ;;`: execute `command`, then utop will response interacively
+
+# Ch1. Better Programming Through OCaml
+
+## 1.1 The Past of OCaml
+
+Genealogically, OCaml comes from the line of programming languages whose grandfather is Lisp and includes other modern languages such as Clojure, F#, Haskell, and Racket.
+
+OCaml originates from work done by Robin Milner and others at the Edinburgh Laboratory for Computer Science in Scotland. They were working on theorem provers in the late 1970s and early 1980s. Traditionally, theorem provers were implemented in languages such as Lisp. Milner kept running into the problem that the theorem provers would sometimes put incorrect “proofs” (i.e., non-proofs) together and claim that they were valid. So he tried to develop a language that only allowed you to construct valid proofs. ML, which stands for “Meta Language”, was the result of that work. The type system of ML was carefully constructed so that you could only construct valid proofs in the language. A theorem prover was then written as a program that constructed a proof. Eventually, this “Classic ML” evolved into a full-fledged programming language.
+
+In the early ’80s, there was a schism in the ML community with the French on one side and the British and US on another. The French went on to develop CAML and later Objective CAML (OCaml) while the Brits and Americans developed Standard ML. The two dialects are quite similar. Microsoft introduced its own variant of OCaml called F# in 2005.
+
+Milner received the Turing Award in 1991 in large part for his work on ML. The [ACM website for his award](https://amturing.acm.org/award_winners/milner_1569367.cfm) includes this praise:
+
+> ML was way ahead of its time. It is built on clean and well-articulated mathematical ideas, teased apart so that they can be studied independently and relatively easily remixed and reused. ML has influenced many practical languages, including Java, Scala, and Microsoft’s F#. Indeed, no serious language designer should ignore this example of good design.
+
+## 1.2 The present of OCaml
+
+OCaml is a functional programming language.
+
+- The key linguistic abstraction of functional languages is the mathematical function
+- A function maps an input to an output; for the same input, it always produce the same output
+- Mathematical functions are *stateless*
+  - They don't maintain any extra information or state that persists between usages of the function.
+- Functions are first-class
+  - You can use them as values
+
+Expressing everthing in terms of functions enables a uniform and simple programming model that is easier to reason about than the procedures and methods found in other famlies of languages.
+
+*Imperative* programming languages such as C and Java involve *mutable* state that changes throughout execution. *Commands* specify how to compute by destructively changing that state. Procedures (or methods) can have *side effects* that update state in addition to producing a return value.
+
+The **fantasy of mutability** is that it’s easy to reason about: the machine does this, then this, etc.
+
+The **reality of mutability** is that whereas machines are good at complicated manipulation of state, humans are not good at understanding it. The essence of why that’s true is that mutability breaks *referential transparency*: the ability to replace an expression with its value without affecting the result of a computation. In math, if f(x)=y, then you can substitute y anywhere you see f(x). In imperative languages, you cannot: f might have side effects, so computing f(x) at time t might result in a different value than at time t′.
+
+---
+
+OCaml is a *statically-typed* and *type-safe* programming language. A statically-typed language detects type errors at compile time; if a type error is detected, the language won’t allow execution of the program.
+
+OCaml supports a number of advanced features, some of which you will have encountered before, and some of which are likely to be new:
+
+- **Algebraic data types:** You can build sophisticated data structures in OCaml easily, without fussing with pointers and memory management. *Pattern matching*—a feature we’ll soon learn about that enables examining the shape of a data structure—makes them even more convenient.
+- **Type inference:** You do not have to write type information down everywhere. The compiler automatically figures out most types. This can make the code easier to read and maintain.
+- **Parametric polymorphism:** Functions and data structures can be parameterized over types. This is crucial for being able to re-use code.
+- **Garbage collection:** Automatic memory management relieves you from the burden of memory allocation and deallocation, a common source of bugs in languages such as C.
+- **Modules:** OCaml makes it easy to structure large systems through the use of modules. Modules are used to encapsulate implementations behind interfaces. OCaml goes well beyond the functionality of most languages with modules by providing functions (called *functors*) that manipulate modules.
+
+## 1.3 Look to the Future
+
+General-purpose languages come and go. In your life you’ll likely learn a handful. Today, it’s Python and Java. Yesterday, it was Pascal and Cobol. Before that, it was Fortran and Lisp. Who knows what it will be tomorrow?
+
+**In this fast-changing field you need to be able to rapidly adapt.**
+
+A good programmer has to learn the principles behind programming that transcend the specifics of any specific language. There’s no better way to get at these principles than to approach programming from a functional perspective. Learning a new language from scratch affords the opportunity to reflect along the way about the difference between *programming* and programming *in a language.*
+
+**OCaml does a great job of clarifying and simplifying the essence of functional programming**
+
+- Other languages that blend functional and imperative programming (like Scala), or
+- take functional programming to the extreme (like Haskell)
+
+**Advanced features of functional languages have a surprising tendency to predict new features of more mainstream languages**
+
+- Java brought garbage collection into the mainstream in 1995; Lisp had it in 1958
+- Java didn’t have generics until version 5 in 2004; the ML family had it in 1990
+- First-class functions, type inference, and pattern matching have been incorporated into mainstream languages like Python, Java, and C++, long after functional languages introduced them
+
+## 1.4 A Brief History of Cornell CS3110
+
+- Once upon a time, there was a course at MIT known as 6.001 ***Structure and Interpretation of Computer Programs* (SICP)**. It used Scheme, a functional programming language. Tim Teitelbaum taught a version of the course at Cornell **in Fall 1988**, following the book rather closely and using Scheme.
+- CS212 : Dan Huttenlocher had been a TA for 6.001 at MIT; he later became faculty at Cornell. **In Fall 1989**, he inaugurated CS 212 Modes of Algorithm Expression. **Basing the course on SICP**, he infused a more rigorous approach to the material. Huttenlocher continued to develop CS 212 through the mid 1990s, using various homegrown dialects of Scheme.
+- CS312 : renamed from CS212; Greg Morrisett inaugurated the new CS 312 in Spring 2001. He switched from Scheme to Standard ML. Kozen first taught it in Fall 2001, and Andrew Myers in Fall 2002. Myers began to incorporate material on modular programming from another MIT textbook, *Program Development in Java: Abstraction, Specification, and Object-Oriented Design* by Barbara Liskov and John Guttag. Huttenlocher first taught the course in Spring 2006.
+- CS3110  In Fall 2008 two big changes came: the language switched to OCaml, and the university switched to four-digit course numbers. CS 312 became CS 3110. Myers, Huttenlocher, Kozen, and Zabih first taught the revised course in Fall 2008, Spring 2009, Fall 2009, and Fall 2010, respectively. Nate Foster first taught the course in Spring 2012; and Bob Constable and Michael George co-taught for the first time in Fall 2013. In Fall 2018 the compilation of this textbook began. It synthesizes the work of over two decades of functional programming instruction at Cornell.
 
 # Ch2. The Basics of OCaml
 
@@ -5191,8 +5277,8 @@ Input ->| Interpreter | -> Output
            ---------------
           |  Interpreter  |
   Input ->|    (or say)   | -> Output
-  		|Virtual machine|
-  		 ---------------
+          |Virtual machine|
+           ---------------
   ```
 
 ​	***Intermediate program*** : java bytecode, OCaml .byte file etc.
@@ -5289,9 +5375,7 @@ Input ->| Interpreter | -> Output
 
    - **Compiler translates IR into machine code**
 
-## 9.3 Extended demo : Calculator
-
-### 9.3.1 Intro
+## 9.3 Calculator_ Intro
 
 We are going to implement an interpreter for this *calculator language*.
 
@@ -5301,7 +5385,304 @@ We are going to implement an interpreter for this *calculator language*.
 - Parentheses
 - Whitespace
 
-input is a string of a expression
+input is a **string** of a expression
 
-output is a string of the result
+output is a **string** of the result
+
+## 9.4 Calculator_ Parse
+
+TODO
+
+## 9.5 Caculator_ Evaluate Integers
+
+TODO
+
+## 9.6 Caculator_ Addition
+
+TODO
+
+## 9.7 Caculator_ Mutiplication
+
+TODO
+
+## 9.8 Caculator_ Precedence
+
+TODO
+
+## 9.9 Caculator_ Whitespace and Parentheses
+
+TODO
+
+## 9.10 Tokens and AST
+
+**Lexer + Parser + AST**
+
+- All highly coupled: makes any linear presentation challenging
+- Data-based view:
+  - Tokens: declared in parser, produced in lexer
+  - AST nodes: defined in AST, produced in parser
+- Tool-based view:
+  - Lexer: produces tokens
+  - Parser: declares tokens, produces AST nodes
+  - Evaluator: computes on AST nodes
+
+## 9.10 Menhir and Ocamllex
+
+### 9.10.1Parser Generator
+
+- Parser generator: .mly -> .ml
+- yacc is an old C parser generator
+  - "Yet Another Compiler Complier"
+- ocamlyacc is an OCaml equivalent
+- Menhir is a more modern substitue
+
+**[parser.mly] : declarations**
+
+```
+%token <int> INT
+%token TIMES
+%token PLUS
+%token LPAREN
+%token RPAREN
+%token EOF
+```
+
+- Above are tokens that lexer will produce
+
+- `%token <int> INT` will carry an OCaml [int] with it
+
+**[parser.mly] : more declarations**
+
+```
+%left PLUS
+%left TIMES
+```
+
+- associativity
+  - `%left`: left associative: `x + y + z` means `(x + y) + z`
+  - `%right` : right associative: `x + y + z` means `x + (y + z)`
+  - `%nonassoc`: non-associative: `x + y + z` is ambiguous; must write parens to clarify
+
+- later in declarations = highr precedence
+  - so `1 + 2 * 3` is `1 + (2 * 3)` not `(1 + 2) * 3`
+
+**[parser.mly] : final declaration**
+
+- `%start <Ast.expr> prog` : Starting point for parsing is the rule named `prog` and it returns an OCaml `Ast.expr`
+
+**[parser.mly] : production rules**
+
+- Each rule has the form:
+
+  ```
+  name:
+  | production1 {action1}
+  | production2 {action2}
+  | ...;
+  ```
+
+  and is similar to BNF
+
+  ```
+  name ::= production1 | production2 | ...
+  ```
+
+  The actions say what OCaml value to produce for the rule
+
+- expr rules
+
+  ```ocaml
+  (* OCaml parser.mly *)
+  expr:
+          | i = INT { Int i }
+          | e1 = expr; TIMES; e2 = expr  { Binop (Mul, e1, e2) }
+          | e1 = expr; PLUS; e2 = expr  { Binop (Add, e1, e2) }
+          | LPAREN; e = expr; RPAREN { e }
+          ;
+  ```
+
+  ```
+  BNF:
+  e ::= i | e1 * e2 | e1 + e2 | (e)
+  ```
+
+  - `i = INT { Int i }` parse an INT token that carries integer i. Return an AST node alse carry i.
+  - `e1 = expr; TIMES; e2 = expr  { Binop (Mul, e1, e2) }` parse expr * TIMES * expr, bind e1 = first expr, e2 = second expr and return an AST node carring e1 and e2
+
+
+
+### 9.10.2 Lexer generator
+
+- Lexer generator: .mll -> .ml
+- lex is an old C lexer
+- ocamllex is an OCaml equivalent
+
+**[lexer.mll] : header**
+
+```ocaml
+{
+  open Parser
+}
+```
+
+- Any code in header copied into [lexer.ml]
+- This [open] makes parser tokens usable in lexer
+
+**[lexer.mll] : identifiers**
+
+```
+let white = [' ' '\t']+
+let digit = ['0'-'9']
+let int = '-'? digit+
+```
+
+- Regular expressions that help define the syntax of tokens
+  - whitespace:
+    - space char : `' '`
+    - tab char : `'\t'`
+    - either of them : `[' ' '\t']`
+    - one or more of either of them: `[' ' '\t']+`
+  - int
+  - digit
+
+**[lexer.mll] : production rule**
+
+```ocaml
+rule read =
+  parse
+(* recsive read to skip white and return next token *)
+  | white { read lexbuf }
+  | float {FLOAT (float_of_string (Lexing.lexeme lexbuf))}
+  | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
+  | "*" { TIMES }
+  | "+" { PLUS }
+  | "-" { MINUS }
+  | "/" { DIV }
+  | "(" { LPAREN }
+  | ")" { RPAREN }
+  | "_exit" {raise Exit_calc}
+  | eof { EOF }
+```
+
+- `rule` and `parse` are keywords
+- `"*" { TIMES }` means if I have read `"*"` in `lexing.lexbuf`, it will return `TIMES`. All in `{ }` are return value.
+- `rule read =` : `Lexer.read` becomes a function that can be used to read a token from the token stream. 
+- `white { read lexbuf }` If next chars from char stream match regular expression `white`, then recursively call `read` on the remaining char stream, thus skipping the whitespace
+- `int { INT (int_of_string (Lexing.lexeme lexbuf)) }` : `Lexing.lexeme` is the string that matched `int` 
+
+## 9.11 Grammars and BNF
+
+**Grammar**
+
+```BNF
+Backus-Naur Form (BNF)
+
+e ::= i
+	| e1 bop e2
+	| ( e )
+	
+bop ::= + | *
+i ::= integers
+```
+
+**AST v.s. BNF: note similarity**
+
+```
+e ::= i
+	| e1 bop e2
+	| (e)
+
+type expr = 
+	| Int of int
+	| Binop of bop * expr * expr
+	(* we dont need `(` `)` when use tree structure *)
+=======================================
+bop ::= + | *
+
+type bop = 
+	| Add
+	| Mult
+```
+
+## 9.12 Small-Step Evaluation
+
+``` 
+       AST
+       ---
+      | + |
+       ---
+      /   \
+    ---   ---
+   | + | | + |
+    ---   ---     \
+   /  \   /  \     \
+ 10    1 5    6     \
+                     \
+                      \   
+                   -----------------
+                  |                 |
+                  |    Evaluator    |
+                  |                 |
+                   -----------------
+                      /
+                     |
+                     v
+                    12
+```
+
+**Evaluation strategy**
+
+- An expression e takes a single step to a new expression e' by simpilfying some subexpression
+- Expression keeps stepping until it reaches a value
+- Values never step further
+
+## 9.13 Evaluation Relations
+
+define : 
+
+- single-step relation : `e -> e'` exactly one step of evaluation which is the step function and is mostly what we'll use 
+- muti-step relation : `e ->* e'` zero or more steps of evaluation
+- big-step relation : `e => v` all the steps of evaluation which is the `eval` function we just code
+
+## 9.14 Let Semantics
+
+define `e{v/x}` means `e` with `v` substituted for `x`
+
+`let x = e1 in e2 -> let x = e1' in e2`      if e1 -> e1'
+
+`let x = v1 in e2 -> e2{v1/x}`
+
+## 9.15 Substitution Ex
+
+let x = 1 in (let x = x + x in x + x)
+
+-> let x = ((x + x){1/x}) in x + x
+
+-> let x = 2 in x + x
+
+-> 2 + 2
+
+-> 4
+
+## 9.16 Definition of Substitution
+
+Nothing to do for integers:
+
+`i{v/x}` = `i`
+
+Just keep going through operations:
+
+`(e1 + e2){v/x}` = `(e1{v/x}) + (e2{v/x})`
+
+Variables are where substitution really happens:
+
+`x{v/x}` = `v`
+
+`y{v/x}` = `y`
+
+Defining substitution: let
+
+`(let y = e1 in e2){v/x}` = `let y = (e1{v/x}) in (e2{v/x})`
+
+`(let x = e1 in e2){v/x}` = `let x = (e1{v/x}) in e2`
 
